@@ -1,23 +1,25 @@
+import { success } from "zod";
 import sql from "../db.js";
 import {
 	createBookingSchema,
 	getBookingByUseridSchema,
 	getAllBookingsSchema,
 	getBookingsByDeskidSchema,
+	updateBookingSchema,
 } from "../schema/bookingSchema.js";
 
-interface Booking {
+interface BookingType {
 	id: string | undefined;
 	userid: string;
 	status: number;
 	deskid: string;
-	startDate: Date;
-	endDate: Date;
+	start_date: Date;
+	end_date: Date;
 	createdOn: Date | undefined;
 }
 
 //create
-export async function createBooking(booking: Booking) {
+export async function createBooking(booking: BookingType) {
 	try {
 		const parsedParams = createBookingSchema.safeParse(booking);
 		if (!parsedParams.success) {
@@ -26,10 +28,10 @@ export async function createBooking(booking: Booking) {
 				message: `Validation Error: ${parsedParams.error}`,
 			};
 		}
-		const { userid, status, deskid, startDate, endDate } = booking;
+		const { userid, status, deskid, start_date, end_date } = booking;
 		const bookingCreated = await sql`
-            INSERT INTO booking (userid, status, deskid, startDate, endDate)
-            VALUES (${userid}, ${status}, ${deskid}, ${startDate}, ${endDate})
+            INSERT INTO booking (userid, status, deskid, start_date, end_date)
+            VALUES (${userid}, ${status}, ${deskid}, ${start_date}, ${end_date})
         `;
 		return { success: "true", data: bookingCreated };
 	} catch (err) {
@@ -42,10 +44,10 @@ export async function getBookingsByUserid(
 	userid: string[],
 	params: {
 		deskid: number[] | undefined;
-		startDate: Date | undefined;
-		endDate: Date | undefined;
+		start_date: Date | undefined;
+		end_date: Date | undefined;
 		status: number[] | undefined;
-		createdOn: Date[] | undefined;
+		created_on: Date[] | undefined;
 	},
 	page: number,
 	count: number = 10,
@@ -61,8 +63,8 @@ export async function getBookingsByUserid(
 				message: `Validation Error: ${parsedParams.error}`,
 			};
 		}
-		const startDateFrom = (x: Date) => sql`and startDate >= ${x}`;
-		const endDateTo = (x: Date) => sql`and endDate <= ${x}`;
+		const startDateFrom = (x: Date) => sql`and start_date >= ${x}`;
+		const endDateTo = (x: Date) => sql`and end_date <= ${x}`;
 		const statusIs = (x: number[]) => sql`and status in ${sql(x)}`;
 		const deskidIs = (x: number[]) => sql`and deskid in ${sql(x)}`;
 		const createdOnBetween = (from: Date, to: Date) =>
@@ -72,13 +74,13 @@ export async function getBookingsByUserid(
             FROM booking
             WHERE userid in ${sql(userid)} ${
 							params.deskid ? deskidIs(params.deskid) : sql``
-						} ${params.startDate ? startDateFrom(params.startDate) : sql``} ${
-							params.endDate ? endDateTo(params.endDate) : sql``
+						} ${params.start_date ? startDateFrom(params.start_date) : sql``} ${
+							params.end_date ? endDateTo(params.end_date) : sql``
 						} ${params.status ? statusIs(params.status) : sql``} ${
-							params.createdOn && params.createdOn.length == 2
+							params.created_on && params.created_on.length == 2
 								? createdOnBetween(
-										params.createdOn[0] as unknown as Date,
-										params.createdOn[1] as unknown as Date,
+										params.created_on[0] as unknown as Date,
+										params.created_on[1] as unknown as Date,
 									)
 								: sql``
 						}
@@ -95,10 +97,10 @@ export async function getBookingsByDeskid(
 	deskid: string[],
 	params: {
 		userid: number[] | undefined;
-		startDate: Date | undefined;
-		endDate: Date | undefined;
+		start_date: Date | undefined;
+		end_date: Date | undefined;
 		status: number[] | undefined;
-		createdOn: Date[] | undefined;
+		created_on: Date[] | undefined;
 	},
 	page: number,
 	count: number = 10,
@@ -114,8 +116,8 @@ export async function getBookingsByDeskid(
 				message: `Validation Error: ${parsedParams.error}`,
 			};
 		}
-		const startDateFrom = (x: Date) => sql`and startDate >= ${x}`;
-		const endDateTo = (x: Date) => sql`and endDate <= ${x}`;
+		const startDateFrom = (x: Date) => sql`and start_date >= ${x}`;
+		const endDateTo = (x: Date) => sql`and end_date <= ${x}`;
 		const statusIs = (x: number[]) => sql`and status in ${sql(x)}`;
 		const userIdis = (x: number[]) => sql`and userid in ${sql(x)}`;
 		const createdOnBetween = (from: Date, to: Date) =>
@@ -125,13 +127,13 @@ export async function getBookingsByDeskid(
             FROM booking
             WHERE deskid in ${sql(deskid)} ${
 							params.userid ? userIdis(params.userid) : sql``
-						} ${params.startDate ? startDateFrom(params.startDate) : sql``} ${
-							params.endDate ? endDateTo(params.endDate) : sql``
+						} ${params.start_date ? startDateFrom(params.start_date) : sql``} ${
+							params.end_date ? endDateTo(params.end_date) : sql``
 						} ${params.status ? statusIs(params.status) : sql``} ${
-							params.createdOn && params.createdOn.length == 2
+							params.created_on && params.created_on.length == 2
 								? createdOnBetween(
-										params.createdOn[0] as unknown as Date,
-										params.createdOn[1] as unknown as Date,
+										params.created_on[0] as unknown as Date,
+										params.created_on[1] as unknown as Date,
 									)
 								: sql``
 						}
@@ -149,10 +151,10 @@ export async function getBookingsByDeskid(
 
 export async function getAllBookings(
 	params: {
-		startDate: Date | undefined;
-		endDate: Date | undefined;
+		start_date: Date | undefined;
+		end_date: Date | undefined;
 		status: number[] | undefined;
-		createdOn: Date[] | undefined;
+		created_on: Date[] | undefined;
 	},
 	page: number,
 	count: number = 10,
@@ -167,8 +169,8 @@ export async function getAllBookings(
 				message: `Validation Error: ${parsedParams.error}`,
 			};
 		}
-		const startDateFrom = (x: Date) => sql`and startDate >= ${x}`;
-		const endDateTo = (x: Date) => sql`and endDate <= ${x}`;
+		const startDateFrom = (x: Date) => sql`and start_date >= ${x}`;
+		const endDateTo = (x: Date) => sql`and end_date <= ${x}`;
 		const statusIs = (x: number[]) => sql`and status in ${sql(x)}`;
 		const createdOnBetween = (from: Date, to: Date) =>
 			sql`and createdOn between ${from} and ${to}`;
@@ -176,13 +178,13 @@ export async function getAllBookings(
             SELECT *
             FROM booking
             WHERE status in ${params.status ? statusIs(params.status) : sql([1, 2, 3, 4, 5])} 
-                        ${params.startDate ? startDateFrom(params.startDate) : sql``} ${
-													params.endDate ? endDateTo(params.endDate) : sql``
+                        ${params.start_date ? startDateFrom(params.start_date) : sql``} ${
+													params.end_date ? endDateTo(params.end_date) : sql``
 												} ${params.status ? statusIs(params.status) : sql``} ${
-													params.createdOn && params.createdOn.length == 2
+													params.created_on && params.created_on.length == 2
 														? createdOnBetween(
-																params.createdOn[0] as unknown as Date,
-																params.createdOn[1] as unknown as Date,
+																params.created_on[0] as unknown as Date,
+																params.created_on[1] as unknown as Date,
 															)
 														: sql``
 												}
@@ -190,6 +192,63 @@ export async function getAllBookings(
             OFFSET ${(page - 1) * 10}
         `;
 		return { success: "true", data: allBookings };
+	} catch (err) {
+		return {
+			success: "false",
+			message: `Something went wrong. Err: ${err}`,
+		};
+	}
+}
+
+//update
+export async function updateBooking(bookingId: string, newBooking: any) {
+	try {
+		const parsedParams = updateBookingSchema.safeParse({
+			id: bookingId,
+			...newBooking,
+		});
+		if (!parsedParams.success) {
+			return {
+				success: "false",
+				message: `Validation Error: ${parsedParams.error}`,
+			};
+		}
+		const updatedBooking = await sql`
+			UPDATE booking SET ${sql(bookingId, newBooking)}
+			WHERE id = ${bookingId}
+		`;
+		return {
+			success: "true",
+			data: updatedBooking,
+		};
+	} catch (err) {
+		return {
+			success: "false",
+			message: `Something went wrong. Err: ${err}`,
+		};
+	}
+}
+
+//delete
+export async function deleteBooking(bookingId: string) {
+	try {
+		const parsedParams = updateBookingSchema.safeParse({
+			id: bookingId,
+		});
+		if (!parsedParams.success) {
+			return {
+				success: "false",
+				message: `Validation Error: ${parsedParams.error}`,
+			};
+		}
+		const deletedBooking = await sql`
+			DELETE FROM booking
+			WHERE id = ${bookingId}
+		`;
+		return {
+			success: "true",
+			data: deletedBooking,
+		};
 	} catch (err) {
 		return {
 			success: "false",
