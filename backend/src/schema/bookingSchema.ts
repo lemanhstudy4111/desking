@@ -1,18 +1,25 @@
 import * as z from "zod";
+import { validateOneHourBookTime } from "../utils.js";
 
-export const createBookingSchema = z.object({
-	userid: z.uuidv4(),
-	status: z.int().min(1),
-	deskid: z.uuidv4(),
-	start_date: z.iso.datetime({ precision: -1 }),
-	end_date: z.iso.datetime({ precision: -1 }),
-});
+export const createBookingSchema = z
+	.object({
+		userid: z.uuidv4(),
+		deskid: z.int(),
+		start_date: z.iso.datetime({ precision: -1 }),
+		end_date: z.iso.datetime({ precision: -1 }),
+	})
+	.refine(
+		({ start_date, end_date }) => validateOneHourBookTime(start_date, end_date),
+		{
+			error: "Date validation failed.",
+		},
+	);
 
 export const getBookingByUseridSchema = z
 	.object({
 		userid: z.uuidv4(),
-		status: z.int().min(1).optional(),
-		deskid: z.uuidv4().optional(),
+		status: z.array(z.int().min(1)).optional(),
+		deskid: z.array(z.int()).optional(),
 		start_date: z.iso.datetime({ precision: -1 }).optional(),
 		end_date: z.iso.datetime({ precision: -1 }).optional(),
 		created_on: z.iso.datetime({ precision: -1 }).optional(),
@@ -28,8 +35,8 @@ export const getBookingByUseridSchema = z
 export const getBookingsByDeskidSchema = z
 	.object({
 		userid: z.uuidv4().optional(),
-		status: z.int().min(1).optional(),
-		deskid: z.uuidv4(),
+		status: z.array(z.int().min(1)).optional(),
+		deskid: z.array(z.int()),
 		start_date: z.iso.datetime({ precision: -1 }).optional(),
 		end_date: z.iso.datetime({ precision: -1 }).optional(),
 		created_on: z.iso.datetime({ precision: -1 }).optional(),
@@ -44,7 +51,7 @@ export const getBookingsByDeskidSchema = z
 
 export const getAllBookingsSchema = z
 	.object({
-		status: z.int().min(1).optional(),
+		status: z.array(z.int().min(1)).optional(),
 		start_date: z.iso.datetime({ precision: -1 }).optional(),
 		end_date: z.iso.datetime({ precision: -1 }).optional(),
 		created_on: z.iso.datetime({ precision: -1 }).optional(),
@@ -62,7 +69,7 @@ export const updateBookingSchema = z
 		id: z.uuidv4(),
 		userid: z.uuidv4().optional(),
 		status: z.int().min(1).optional(),
-		deskid: z.uuidv4().optional(),
+		deskid: z.array(z.int()).optional(),
 		start_date: z.iso.datetime({ precision: -1 }).optional(),
 		end_date: z.iso.datetime({ precision: -1 }).optional(),
 	})
