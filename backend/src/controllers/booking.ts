@@ -32,7 +32,9 @@ export async function createBooking(booking: BookingType) {
 			const isDeskAvailable = await sql`
 				SELECT EXISTS(SELECT 1 FROM booked_desks_with_names
 				WHERE deskid = ${deskid} 
-					AND (${end_date} >= b.end_date and ${start_date} <= b.start_date) or (${start_date} between b.start_date and b.end_date) or (${end_date} between b.start_date and b.end_date))
+					AND (${end_date} >= b.end_date and ${start_date} <= b.start_date) 
+					OR (${start_date} between b.start_date and b.end_date) 
+					OR (${end_date} between b.start_date and b.end_date))
 			`;
 			if (
 				isDeskAvailable &&
@@ -73,7 +75,10 @@ export async function createWaitlistBooking(booking: BookingType) {
 			INSERT INTO booking (userid, status, deskid, start_date, end_date)
 			VALUES (${userid}, 1, ${deskid}, ${start_date}, ${end_date})
 		`;
-		return createdWaitlistBooking;
+		return {
+			success: "true",
+			data: createdWaitlistBooking,
+		};
 	} catch (err) {
 		return { success: "false", message: `Something went wrong. Err: ${err}` };
 	}
