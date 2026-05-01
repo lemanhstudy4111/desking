@@ -67,23 +67,18 @@ export const getAllBookingsSchema = z
 export const updateBookingSchema = z
 	.object({
 		id: z.uuidv4(),
+		userid: z.uuidv4().optional(),
+		status: z.int().min(1).optional(),
 		deskid: z.array(z.int()).optional(),
 		start_date: z.iso.datetime({ precision: -1 }).optional(),
 		end_date: z.iso.datetime({ precision: -1 }).optional(),
 	})
 	.refine(
-		({ deskid, start_date, end_date }) => deskid || start_date || end_date,
+		({ userid, status, deskid, start_date, end_date }) =>
+			userid || status || deskid || start_date || end_date,
 		{
-			error: "At least one of deskid, start date, end date for booking update.",
-		},
-	)
-	.refine(
-		({ start_date, end_date }) =>
-			start_date && end_date
-				? validateOneHourBookTime(start_date, end_date)
-				: true,
-		{
-			error: "Date validation failed.",
+			error:
+				"At least one of userid, status, deskid, start date, end date for booking update.",
 		},
 	);
 
