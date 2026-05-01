@@ -29,7 +29,7 @@ export async function createBooking(booking: BookingType) {
 		}
 		const { userid, deskid, start_date, end_date } = parsedParams.data;
 		const createdBooking = await sql.begin(async (sql) => {
-			const isDeskAvailable = await sql`
+			const isDeskBooked = await sql`
 				SELECT EXISTS(SELECT 1 FROM booked_desks_with_names
 				WHERE deskid = ${deskid} 
 					AND (${end_date} >= b.end_date and ${start_date} <= b.start_date) 
@@ -37,9 +37,9 @@ export async function createBooking(booking: BookingType) {
 					OR (${end_date} between b.start_date and b.end_date))
 			`;
 			if (
-				isDeskAvailable &&
-				isDeskAvailable.length > 0 &&
-				isDeskAvailable[0]?.["exists"] == "true"
+				isDeskBooked &&
+				isDeskBooked.length > 0 &&
+				isDeskBooked[0]?.["exists"] == "true"
 			) {
 				return {
 					success: "false",
@@ -260,14 +260,35 @@ export async function updateBooking(bookingId: string, newBooking: any) {
 				message: `Validation Error: ${parsedParams.error}`,
 			};
 		}
-		const updatedBooking = await sql`
-			UPDATE booking SET ${sql(bookingId, newBooking)}
-			WHERE id = ${bookingId}
-		`;
-		return {
-			success: "true",
-			data: updatedBooking,
-		};
+		const { deskid, start_date, end_date } = parsedParams.data;
+		const updatedBooking = await sql.begin(async (sql) => {
+			const isDeskBooked = await sql`
+				SELECT EXISTS(SELECT 1 FROM booked_desks_with_names
+				WHERE deskid = ${deskid} 
+					AND (${end_date} >= b.end_date and ${start_date} <= b.start_date) 
+					OR (${start_date} between b.start_date and b.end_date) 
+					OR (${end_date} between b.start_date and b.end_date))
+			`;
+			if (
+				isDeskBooked &&
+				isDeskBooked.length > 0 &&
+				isDeskBooked[0]?.["exists"] == "true"
+			) {
+				return {
+					success: "false",
+					message: "Desk is already reserved.",
+				};
+			}
+			const created = await sql`
+				UPDATE booking SET deskid = ${deskid}, start_date = ${start_date}, end_date = ${end_date}
+				WHERE deskid = ${deskid}
+			`;
+			return {
+				success: "true",
+				data: created,
+			};
+		});
+		return updatedBooking;
 	} catch (err) {
 		return {
 			success: "false",
