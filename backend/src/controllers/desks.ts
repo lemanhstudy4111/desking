@@ -2,7 +2,9 @@ import { success } from "zod";
 import sql from "../db.js";
 import {
 	createDeskSchema,
+	deleteDeskSchema,
 	getAllDesksStartDateEndDate,
+	updateDeskSchema,
 } from "../schema/deskSchema.js";
 
 interface DeskType {
@@ -145,6 +147,64 @@ export async function getAllAvailableDesks(
 		return {
 			success: "true",
 			data: allDeskStatus,
+		};
+	} catch (err) {
+		return {
+			success: "false",
+			message: `Something went wrong. Err: ${err}`,
+		};
+	}
+}
+
+//update
+export async function updateDesk(deskid: number, newDeskInfo: any) {
+	try {
+		const parsedParams = updateDeskSchema.safeParse({
+			id: deskid,
+			...newDeskInfo,
+		});
+		if (!parsedParams.success) {
+			return {
+				success: "false",
+				message: `Validation Error: ${parsedParams.error}`,
+			};
+		}
+		const cols = Object(newDeskInfo).keys();
+		const updatedBooking = await sql`
+			UPDATE desk SET ${sql(newDeskInfo, cols)}
+			WHERE id = ${deskid}
+		`;
+		return {
+			success: "true",
+			data: updatedBooking,
+		};
+	} catch (err) {
+		return {
+			success: "false",
+			message: `Something went wrong. Err: ${err}`,
+		};
+	}
+}
+
+//delete
+export async function deleteBooking(bookingId: string) {
+	try {
+		const parsedParams = deleteDeskSchema.safeParse({
+			id: bookingId,
+		});
+		if (!parsedParams.success) {
+			return {
+				success: "false",
+				message: `Validation Error: ${parsedParams.error}`,
+			};
+		}
+		const deletedBooking = await sql`
+			DELETE FROM booking
+			WHERE id = ${bookingId}
+		`;
+		return {
+			success: "true",
+			data: deletedBooking,
 		};
 	} catch (err) {
 		return {
