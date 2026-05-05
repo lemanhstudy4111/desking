@@ -13,6 +13,8 @@ declare global {
 			DATABASE: string;
 			USER: string;
 			APP_PORT: Number;
+			SUPABASE_PROJECT_ID: string;
+			SUPABASE_PUBLISHABLE_KEY: string;
 		}
 	}
 }
