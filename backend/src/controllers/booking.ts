@@ -7,6 +7,12 @@ import {
 	getBookingsByDeskidSchema,
 	updateBookingSchema,
 } from "../schema/bookingSchema.js";
+import {
+	returnGeneralError,
+	returnOpFailed,
+	returnSuccess,
+	returnValidationError,
+} from "../error.js";
 
 interface BookingType {
 	id: string | undefined;
@@ -22,10 +28,7 @@ export async function createBooking(booking: BookingType) {
 	try {
 		const parsedParams = createBookingSchema.safeParse(booking);
 		if (!parsedParams.success) {
-			return {
-				success: "false",
-				message: `Validation Error: ${parsedParams.error}`,
-			};
+			return returnValidationError(parsedParams.error);
 		}
 		const { userid, deskid, start_date, end_date } = parsedParams.data;
 		const createdBooking = await sql.begin(async (sql) => {
@@ -41,23 +44,17 @@ export async function createBooking(booking: BookingType) {
 				isDeskBooked.length > 0 &&
 				isDeskBooked[0]?.["exists"] == "true"
 			) {
-				return {
-					success: "false",
-					message: "Desk is already reserved.",
-				};
+				return returnOpFailed("Desk is already reserved");
 			}
 			const created = await sql`
 				INSERT INTO booking (userid, status, deskid, start_date, end_date)
 				VALUES (${userid}, 2, ${deskid}, ${start_date}, ${end_date})
 			`;
-			return {
-				success: "true",
-				data: created,
-			};
+			return returnSuccess(created);
 		});
 		return createdBooking;
 	} catch (err) {
-		return { success: "false", message: `Something went wrong. Err: ${err}` };
+		return returnGeneralError(err);
 	}
 }
 
@@ -65,22 +62,16 @@ export async function createWaitlistBooking(booking: BookingType) {
 	try {
 		const parsedParams = createBookingSchema.safeParse(booking);
 		if (!parsedParams.success) {
-			return {
-				success: "false",
-				message: `Validation Error: ${parsedParams.error}`,
-			};
+			return returnValidationError(parsedParams.error);
 		}
 		const { userid, deskid, start_date, end_date } = parsedParams.data;
 		const createdWaitlistBooking = await sql`
 			INSERT INTO booking (userid, status, deskid, start_date, end_date)
 			VALUES (${userid}, 1, ${deskid}, ${start_date}, ${end_date})
 		`;
-		return {
-			success: "true",
-			data: createdWaitlistBooking,
-		};
+		return returnSuccess(createdWaitlistBooking);
 	} catch (err) {
-		return { success: "false", message: `Something went wrong. Err: ${err}` };
+		return returnGeneralError(err);
 	}
 }
 
@@ -103,10 +94,7 @@ export async function getBookingsByUserid(
 			...params,
 		});
 		if (!parsedParams.success) {
-			return {
-				success: "false",
-				message: `Validation Error: ${parsedParams.error}`,
-			};
+			return returnValidationError(parsedParams.error);
 		}
 		const { deskid, start_date, end_date, status, created_on } =
 			parsedParams.data;
@@ -134,9 +122,9 @@ export async function getBookingsByUserid(
             LIMIT ${count}
             OFFSET ${(page - 1) * count}
         `;
-		return { success: "true", data: bookingsByUser };
+		return returnSuccess(bookingsByUser);
 	} catch (err) {
-		return { success: "false", message: `Something went wrong. Err: ${err}` };
+		return returnGeneralError(err);
 	}
 }
 
@@ -158,10 +146,7 @@ export async function getBookingsByDeskid(
 			...params,
 		});
 		if (!parsedParams.success) {
-			return {
-				success: "false",
-				message: `Validation Error: ${parsedParams.error}`,
-			};
+			return returnValidationError(parsedParams.error);
 		}
 		const startDateFrom = (x: Date) => sql`and start_date >= ${x}`;
 		const endDateTo = (x: Date) => sql`and end_date <= ${x}`;
@@ -187,12 +172,9 @@ export async function getBookingsByDeskid(
             LIMIT ${count}
             OFFSET ${(page - 1) * count}
         `;
-		return { success: "true", data: bookingsByDesk };
+		return returnSuccess(bookingsByDesk);
 	} catch (err) {
-		return {
-			success: "false",
-			message: `Something went wrong. Err: ${err}`,
-		};
+		return returnGeneralError(err);
 	}
 }
 
@@ -211,10 +193,7 @@ export async function getAllBookings(
 			...params,
 		});
 		if (!parsedParams.success) {
-			return {
-				success: "false",
-				message: `Validation Error: ${parsedParams.error}`,
-			};
+			return returnValidationError(parsedParams.error);
 		}
 		const startDateFrom = (x: Date) => sql`and start_date >= ${x}`;
 		const endDateTo = (x: Date) => sql`and end_date <= ${x}`;
@@ -238,12 +217,9 @@ export async function getAllBookings(
             LIMIT ${count}
             OFFSET ${(page - 1) * count}
         `;
-		return { success: "true", data: allBookings };
+		return returnSuccess(allBookings);
 	} catch (err) {
-		return {
-			success: "false",
-			message: `Something went wrong. Err: ${err}`,
-		};
+		return returnGeneralError(err);
 	}
 }
 
@@ -255,10 +231,7 @@ export async function updateBooking(bookingId: string, newBooking: any) {
 			...newBooking,
 		});
 		if (!parsedParams.success) {
-			return {
-				success: "false",
-				message: `Validation Error: ${parsedParams.error}`,
-			};
+			return returnValidationError(parsedParams.error);
 		}
 		const { deskid, start_date, end_date } = parsedParams.data;
 		const updatedBooking = await sql.begin(async (sql) => {
@@ -274,26 +247,17 @@ export async function updateBooking(bookingId: string, newBooking: any) {
 				isDeskBooked.length > 0 &&
 				isDeskBooked[0]?.["exists"] == "true"
 			) {
-				return {
-					success: "false",
-					message: "Desk is already reserved.",
-				};
+				return returnOpFailed("Desk is already reserved");
 			}
 			const created = await sql`
 				UPDATE booking SET deskid = ${deskid}, start_date = ${start_date}, end_date = ${end_date}
 				WHERE deskid = ${deskid}
 			`;
-			return {
-				success: "true",
-				data: created,
-			};
+			return returnSuccess(created);
 		});
 		return updatedBooking;
 	} catch (err) {
-		return {
-			success: "false",
-			message: `Something went wrong. Err: ${err}`,
-		};
+		return returnGeneralError(err);
 	}
 }
 
@@ -304,23 +268,14 @@ export async function deleteBooking(bookingId: string) {
 			id: bookingId,
 		});
 		if (!parsedParams.success) {
-			return {
-				success: "false",
-				message: `Validation Error: ${parsedParams.error}`,
-			};
+			return returnValidationError(parsedParams.error);
 		}
 		const deletedBooking = await sql`
 			DELETE FROM booking
 			WHERE id = ${bookingId}
 		`;
-		return {
-			success: "true",
-			data: deletedBooking,
-		};
+		returnSuccess(deletedBooking);
 	} catch (err) {
-		return {
-			success: "false",
-			message: `Something went wrong. Err: ${err}`,
-		};
+		return returnGeneralError(err);
 	}
 }

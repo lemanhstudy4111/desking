@@ -6,6 +6,11 @@ import {
 	getAllDesksStartDateEndDate,
 	updateDeskSchema,
 } from "../schema/deskSchema.js";
+import {
+	returnGeneralError,
+	returnSuccess,
+	returnValidationError,
+} from "../error.js";
 
 interface DeskType {
 	name: string;
@@ -18,24 +23,15 @@ export async function createDesk(desk: DeskType) {
 	try {
 		const parsedParams = createDeskSchema.safeParse(desk);
 		if (!parsedParams.success) {
-			return {
-				success: "false",
-				message: `Validation Error: ${parsedParams.error}`,
-			};
+			return returnValidationError(parsedParams.error);
 		}
 		const parsedData = parsedParams.data;
 		const deskCreated = await sql`
             INSERT INTO desk ${sql(desk, Object.keys(parsedData) as any)}
         `;
-		return {
-			success: "true",
-			data: deskCreated,
-		};
+		return returnSuccess(deskCreated);
 	} catch (err) {
-		return {
-			success: "false",
-			message: `Something went wrong. Err: ${err}`,
-		};
+		return returnGeneralError(err);
 	}
 }
 
@@ -52,10 +48,7 @@ export async function getAllDesksInfo(
 	try {
 		const parsedParams = createDeskSchema.safeParse(params);
 		if (!parsedParams.success) {
-			return {
-				success: "false",
-				message: `Validation Error: ${parsedParams.error}`,
-			};
+			return returnValidationError(parsedParams.error);
 		}
 		const { name, description, start_hour, end_hour } = parsedParams.data;
 		const nameIs = (x: string) => sql`AND name LIKE '${x}'`;
@@ -73,15 +66,9 @@ export async function getAllDesksInfo(
 			LIMIT ${count}
 			OFFSET ${(page - 1) * count}
 		`;
-		return {
-			success: "true",
-			data: allDesks,
-		};
+		return returnSuccess(allDesks);
 	} catch (err) {
-		return {
-			success: "false",
-			message: `Something went wrong. Err: ${err}`,
-		};
+		return returnGeneralError(err);
 	}
 }
 
@@ -96,10 +83,7 @@ export async function getAllDesksWithStatus(
 	try {
 		const parsedParams = getAllDesksStartDateEndDate.safeParse(params);
 		if (!parsedParams.success) {
-			return {
-				success: "false",
-				message: `Validation Error: ${parsedParams.error}`,
-			};
+			return returnValidationError(parsedParams.error);
 		}
 		const { start_date, end_date } = parsedParams.data;
 		const allDeskStatus = await sql`
@@ -108,15 +92,9 @@ export async function getAllDesksWithStatus(
 			LIMIT ${count}
 			OFFSET ${(page - 1) * count}
 		`;
-		return {
-			success: "true",
-			data: allDeskStatus,
-		};
+		return returnSuccess(allDeskStatus);
 	} catch (err) {
-		return {
-			success: "false",
-			message: `Something went wrong. Err: ${err}`,
-		};
+		return returnGeneralError(err);
 	}
 }
 
@@ -131,10 +109,7 @@ export async function getAllAvailableDesks(
 	try {
 		const parsedParams = getAllDesksStartDateEndDate.safeParse(params);
 		if (!parsedParams.success) {
-			return {
-				success: "false",
-				message: `Validation Error: ${parsedParams.error}`,
-			};
+			return returnValidationError(parsedParams.error);
 		}
 		const { start_date, end_date } = parsedParams.data;
 		const allDeskStatus = await sql`
@@ -144,15 +119,9 @@ export async function getAllAvailableDesks(
 			LIMIT ${count}
 			OFFSET ${(page - 1) * count}
 		`;
-		return {
-			success: "true",
-			data: allDeskStatus,
-		};
+		return returnSuccess(allDeskStatus);
 	} catch (err) {
-		return {
-			success: "false",
-			message: `Something went wrong. Err: ${err}`,
-		};
+		return returnGeneralError(err);
 	}
 }
 
@@ -164,25 +133,16 @@ export async function updateDesk(deskid: number, newDeskInfo: any) {
 			...newDeskInfo,
 		});
 		if (!parsedParams.success) {
-			return {
-				success: "false",
-				message: `Validation Error: ${parsedParams.error}`,
-			};
+			return returnValidationError(parsedParams.error);
 		}
 		const cols = Object(newDeskInfo).keys();
-		const updatedBooking = await sql`
+		const updatedDesk = await sql`
 			UPDATE desk SET ${sql(newDeskInfo, cols)}
 			WHERE id = ${deskid}
 		`;
-		return {
-			success: "true",
-			data: updatedBooking,
-		};
+		return returnSuccess(updatedDesk);
 	} catch (err) {
-		return {
-			success: "false",
-			message: `Something went wrong. Err: ${err}`,
-		};
+		return returnGeneralError(err);
 	}
 }
 
@@ -193,23 +153,14 @@ export async function deleteBooking(bookingId: string) {
 			id: bookingId,
 		});
 		if (!parsedParams.success) {
-			return {
-				success: "false",
-				message: `Validation Error: ${parsedParams.error}`,
-			};
+			return returnValidationError(parsedParams.error);
 		}
-		const deletedBooking = await sql`
+		const deletedDesk = await sql`
 			DELETE FROM booking
 			WHERE id = ${bookingId}
 		`;
-		return {
-			success: "true",
-			data: deletedBooking,
-		};
+		return returnSuccess(deletedDesk);
 	} catch (err) {
-		return {
-			success: "false",
-			message: `Something went wrong. Err: ${err}`,
-		};
+		return returnGeneralError(err);
 	}
 }
