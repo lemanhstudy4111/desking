@@ -5,10 +5,10 @@ import {
 	returnSuccess,
 	returnValidationError,
 } from "../error.js";
-import { createUserSchema } from "../schema/userSchema.js";
+import { createUserSchema, signInUserSchema } from "../schema/userSchema.js";
 import sql from "../db.js";
 
-const supabase = createClient(
+export const supabase = createClient(
 	`https://${process.env.SUPABASE_PROJECT_ID}.supabase.co`,
 	process.env.SUPABASE_PUBLISHABLE_KEY,
 );
@@ -50,8 +50,12 @@ export async function signUp(newUser: any) {
 
 export async function signIn(email: string) {
 	try {
+		const parsedParams = signInUserSchema.safeParse({ email: email });
+		if (!parsedParams.success) {
+			return returnValidationError(parsedParams.error);
+		}
 		const { data, error } = await supabase.auth.signInWithOtp({
-			email: email,
+			email: parsedParams.data.email,
 			options: {
 				shouldCreateUser: false,
 			},

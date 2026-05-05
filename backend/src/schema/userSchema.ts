@@ -12,3 +12,7 @@ export const createUserSchema = z.object({
 		.regex(/^[a-zA-Z]+$/)
 		.optional(),
 });
+
+export const signInUserSchema = z.object({
+	email: z.email(),
+});

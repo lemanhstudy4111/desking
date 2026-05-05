@@ -1,6 +1,8 @@
-import { NextFunction, Request, Response } from "express";
-import jwt, { JwtPayload } from "jsonwebtoken";
 import dotenv from "dotenv";
+import { verifyJWTSchema } from "../schema/authSchema.js";
+import { returnValidationError } from "../error.js";
+import { supabase } from "../controllers/auth.js";
+import type { NextFunction, Request, Response } from "express";
 
 dotenv.config();
 interface JwtClaims {
@@ -32,37 +34,56 @@ export async function verifyToken(
 	next: NextFunction,
 ) {
 	try {
-		const token = req.header("Authorization");
-		if (!token) {
-			throw new ValidationError(
-				"Missing authorization token.",
-				"auth",
-				ValidationErrorType.MISSING,
+		const parsedParams = verifyJWTSchema.safeParse({
+			token: req.header("Authorization"),
+		});
+		if (!parsedParams.success) {
+			return returnValidationError(parsedParams.error);
+		}
+		const { token } = parsedParams.data;
+		// await jwt.verify(
+		// 	token,
+		// 	JSON.stringify(process.env.JWT_SECRET),
+		// 	function (err, decoded) {
+		// 		if (err) {
+		// 			throw new Error(
+		// 				`Something went wrong when decoding JWT. Err: ${err}`,
+		// 			);
+		// 		}
+		// 		req.body.token = decoded;
+		// 		req.body.userid =
+		// 			decoded &&
+		// 			typeof decoded != "string" &&
+		// 			(decoded as JwtPayload)["userId"]
+		// 				? (decoded as JwtPayload)["userId"]
+		// 				: "";
+		// 	},
+		// );
+		const { data, error } = await supabase.auth.getClaims(token);
+		if (error) {
+			console.log(`Auth middleware error: ${error}`);
+			throw new Error(
+				`Something went wrong when decoding JWT. Err: ${JSON.stringify(error)}`,
 			);
 		}
-		await jwt.verify(
-			token,
-			JSON.stringify(process.env.JWT_SECRET),
-			function (err, decoded) {
-				if (err) {
-					throw new ValidationError(err.message, "auth", err.name);
-				}
-				req.body.token = decoded;
-				req.body.userid =
-					decoded &&
-					typeof decoded != "string" &&
-					(decoded as JwtPayload)["userId"]
-						? (decoded as JwtPayload)["userId"]
-						: "";
-			},
-		);
+		const status =
+			data && (data as unknown as JwtClaims).aud
+				? (data as unknown as JwtClaims).aud
+				: "none";
+		if (status != "authenticated") {
+			console.log(
+				`User not authenticated or something went wrong when getting status. Data ${data}`,
+			);
+			throw new Error(
+				"User not authenticated or something went wrong when getting status",
+			);
+		}
+		req.body["token"] = data;
 		next();
 	} catch (err) {
 		return res.status(403).send({
 			status: 403,
-			field: err.field,
-			code: err.code,
-			message: err.message,
+			message: (err as Error).message,
 		});
 	}
 }
