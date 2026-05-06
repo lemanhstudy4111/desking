@@ -77,8 +77,8 @@ export async function createWaitlistBooking(booking: BookingType) {
 
 //read
 export async function getBookingsByUserid(
-	userid: string[],
 	params: {
+		userid: string[];
 		deskid: number[] | undefined;
 		start_date: Date | undefined;
 		end_date: Date | undefined;
@@ -89,14 +89,11 @@ export async function getBookingsByUserid(
 	count: number = 10,
 ) {
 	try {
-		const parsedParams = getBookingByUseridSchema.safeParse({
-			userid: userid,
-			...params,
-		});
+		const parsedParams = getBookingByUseridSchema.safeParse(params);
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
 		}
-		const { deskid, start_date, end_date, status, created_on } =
+		const { userid, deskid, start_date, end_date, status, created_on } =
 			parsedParams.data;
 		const startDateFrom = (x: string) => sql`and start_date >= ${sql(x)}`;
 		const endDateTo = (x: string) => sql`and end_date <= ${sql(x)}`;
@@ -129,8 +126,8 @@ export async function getBookingsByUserid(
 }
 
 export async function getBookingsByDeskid(
-	deskid: string[],
 	params: {
+		deskid: string[];
 		userid: number[] | undefined;
 		start_date: Date | undefined;
 		end_date: Date | undefined;
@@ -141,31 +138,30 @@ export async function getBookingsByDeskid(
 	count: number = 10,
 ) {
 	try {
-		const parsedParams = getBookingsByDeskidSchema.safeParse({
-			deskid: deskid,
-			...params,
-		});
+		const parsedParams = getBookingsByDeskidSchema.safeParse(params);
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
 		}
-		const startDateFrom = (x: Date) => sql`and start_date >= ${x}`;
-		const endDateTo = (x: Date) => sql`and end_date <= ${x}`;
+		const startDateFrom = (x: string) => sql`and start_date >= ${x}`;
+		const endDateTo = (x: string) => sql`and end_date <= ${x}`;
 		const statusIs = (x: number[]) => sql`and status in ${sql(x)}`;
-		const userIdis = (x: number[]) => sql`and userid in ${sql(x)}`;
+		const userIdis = (x: string[]) => sql`and userid in ${sql(x)}`;
 		const createdOnBetween = (from: Date, to: Date) =>
 			sql`and createdOn between ${from} and ${to}`;
+		const { deskid, userid, start_date, end_date, status, created_on } =
+			parsedParams.data;
 		const bookingsByDesk = await sql`
             SELECT *
             FROM booking
             WHERE deskid in ${sql(deskid)} ${
-							params.userid ? userIdis(params.userid) : sql``
-						} ${params.start_date ? startDateFrom(params.start_date) : sql``} ${
-							params.end_date ? endDateTo(params.end_date) : sql``
-						} ${params.status ? statusIs(params.status) : sql``} ${
-							params.created_on && params.created_on.length == 2
+							userid ? userIdis(userid) : sql``
+						} ${start_date ? startDateFrom(start_date) : sql``} ${
+							end_date ? endDateTo(end_date) : sql``
+						} ${status ? statusIs(status) : sql``} ${
+							created_on && created_on.length == 2
 								? createdOnBetween(
-										params.created_on[0] as unknown as Date,
-										params.created_on[1] as unknown as Date,
+										created_on[0] as unknown as Date,
+										created_on[1] as unknown as Date,
 									)
 								: sql``
 						}

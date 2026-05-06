@@ -147,7 +147,7 @@ export async function updateDesk(deskid: number, newDeskInfo: any) {
 }
 
 //delete
-export async function deleteBooking(bookingId: string) {
+export async function deleteDesk(bookingId: string) {
 	try {
 		const parsedParams = deleteDeskSchema.safeParse({
 			id: bookingId,
