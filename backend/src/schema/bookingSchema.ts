@@ -17,7 +17,7 @@ export const createBookingSchema = z
 
 export const getBookingByUseridSchema = z
 	.object({
-		userid: z.uuidv4(),
+		userid: z.array(z.uuidv4()),
 		status: z.array(z.int().min(1)).optional(),
 		deskid: z.array(z.int()).optional(),
 		start_date: z.iso.datetime({ precision: -1 }).optional(),
@@ -34,7 +34,7 @@ export const getBookingByUseridSchema = z
 
 export const getBookingsByDeskidSchema = z
 	.object({
-		userid: z.uuidv4().optional(),
+		userid: z.array(z.uuidv4()).optional(),
 		status: z.array(z.int().min(1)).optional(),
 		deskid: z.array(z.int()),
 		start_date: z.iso.datetime({ precision: -1 }).optional(),
