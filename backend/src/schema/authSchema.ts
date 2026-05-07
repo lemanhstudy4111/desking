@@ -4,7 +4,15 @@ export const verifyJWTSchema = z.object({
 	token: z.jwt(),
 });
 
-export const signInUserSchema = z.object({
+export const signInUserPasswordSchema = z.object({
+	email: z.email(),
+	password: z
+		.string()
+		.min(8)
+		.regex(/^[a-zA-Z0-9]+$/),
+});
+
+export const signInUserOTPSchema = z.object({
 	email: z.email(),
 });
 
