@@ -1,4 +1,4 @@
-import type { Request, Response } from "express";
+import { Router, type Request, type Response } from "express";
 import { app } from "../index.js";
 import { verifyToken } from "../middleware/authMiddleware.js";
 import {
@@ -16,28 +16,18 @@ import {
 } from "../controllers/booking.js";
 import { api_ver } from "../index.js";
 
-app.post(
-	`/api/v${api_ver}/booking/create`,
-	verifyToken,
-	postRouteTemplate(createBooking),
-);
-app.get(
-	`/api/v${api_ver}/booking/get/users`,
+export const bookingRouter = Router();
+
+bookingRouter.post(`create`, verifyToken, postRouteTemplate(createBooking));
+bookingRouter.get(
+	`get/users`,
 	verifyToken,
 	searchRouteTemplate(getBookingsByUserid),
 );
-app.get(
-	`/api/v${api_ver}/booking/get/desks`,
+bookingRouter.get(
+	`get/desks`,
 	verifyToken,
 	searchRouteTemplate(getBookingsByDeskid),
 );
-app.put(
-	`/api/v${api_ver}/booking/update`,
-	verifyToken,
-	updateRouteTemplate(updateBooking),
-);
-app.delete(
-	`/api/v${api_ver}/booking/delete`,
-	verifyToken,
-	deleteRouteTemplate(deleteBooking),
-);
+bookingRouter.put(`update`, verifyToken, updateRouteTemplate(updateBooking));
+bookingRouter.delete(`delete`, verifyToken, deleteRouteTemplate(deleteBooking));

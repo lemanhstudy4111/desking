@@ -1,9 +1,9 @@
-import { api_ver } from "../index.js";
-import type { Request, Response } from "express";
-import { app } from "../index.js";
-import { signIn, signUp } from "../controllers/auth.js";
+import { Router, type Request, type Response } from "express";
+import { signInPassword, signUp } from "../controllers/auth.js";
 
-app.post(`/api/v${api_ver}/signup`, async (req: Request, res: Response) => {
+export const authRouter = Router();
+
+authRouter.post("/signup", async (req: Request, res: Response) => {
 	try {
 		if (!req || !req.body) {
 			return res.status(400).send({
@@ -25,14 +25,14 @@ app.post(`/api/v${api_ver}/signup`, async (req: Request, res: Response) => {
 	}
 });
 
-app.post(`/api/v${api_ver}/signin`, async (req: Request, res: Response) => {
+authRouter.post("/signin", async (req: Request, res: Response) => {
 	try {
 		if (!req || !req.body) {
 			return res.status(400).send({
 				message: "Invalid request.",
 			});
 		}
-		const result = await signIn(req.body);
+		const result = await signInPassword(req.body);
 		if (!result.success) {
 			console.log(result);
 			return res.status(500).send({ ...result });

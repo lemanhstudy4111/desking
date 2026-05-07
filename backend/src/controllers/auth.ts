@@ -6,11 +6,17 @@ import {
 	returnValidationError,
 } from "../error.js";
 import { createUserSchema } from "../schema/userSchema.js";
-import { signInUserSchema, verifyOTPSchema } from "../schema/authSchema.js";
+import {
+	signInUserOTPSchema,
+	signInUserPasswordSchema,
+	verifyOTPSchema,
+} from "../schema/authSchema.js";
+import dotenv from "dotenv";
 
+dotenv.config();
 export const supabase = createClient(
 	`https://${process.env.SUPABASE_PROJECT_ID}.supabase.co`,
-	process.env.SUPABASE_PUBLISHABLE_KEY,
+	process.env.SUPABASE_PUBLISHABLE_KEY!,
 );
 
 export async function signUp(newUser: any) {
@@ -31,6 +37,7 @@ export async function signUp(newUser: any) {
 			},
 		});
 		if (error) {
+			console.log("operation error ", error);
 			return returnOpFailed(JSON.stringify(error));
 		}
 		return returnSuccess(data);
@@ -39,12 +46,34 @@ export async function signUp(newUser: any) {
 	}
 }
 
-export async function signIn(email: string) {
+export async function signInPassword(userInfo: any) {
 	try {
-		const parsedParams = signInUserSchema.safeParse({ email });
+		const parsedParams = signInUserPasswordSchema.safeParse(userInfo);
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
 		}
+		console.log(parsedParams.data.email);
+		const { data, error } = await supabase.auth.signInWithPassword({
+			email: parsedParams.data.email,
+			password: parsedParams.data.password,
+		});
+		if (error) {
+			return returnOpFailed(JSON.stringify(error));
+		}
+		return returnSuccess(data);
+	} catch (err) {
+		return returnGeneralError(err);
+	}
+}
+
+//TODO: later feature
+export async function signInOTP(userInfo: any) {
+	try {
+		const parsedParams = signInUserOTPSchema.safeParse(userInfo);
+		if (!parsedParams.success) {
+			return returnValidationError(parsedParams.error);
+		}
+		console.log(parsedParams.data.email);
 		const { data, error } = await supabase.auth.signInWithOtp({
 			email: parsedParams.data.email,
 			options: {
