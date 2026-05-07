@@ -6,7 +6,6 @@ import {
 	returnValidationError,
 } from "../error.js";
 import { createUserSchema } from "../schema/userSchema.js";
-import sql from "../db.js";
 import { signInUserSchema, verifyOTPSchema } from "../schema/authSchema.js";
 
 export const supabase = createClient(
@@ -42,7 +41,7 @@ export async function signUp(newUser: any) {
 
 export async function signIn(email: string) {
 	try {
-		const parsedParams = signInUserSchema.safeParse({ email: email });
+		const parsedParams = signInUserSchema.safeParse({ email });
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
 		}

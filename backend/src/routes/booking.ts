@@ -17,27 +17,27 @@ import {
 import { api_ver } from "../index.js";
 
 app.post(
-	`/api/${api_ver}/booking/create`,
+	`/api/v${api_ver}/booking/create`,
 	verifyToken,
 	postRouteTemplate(createBooking),
 );
 app.get(
-	`/api/${api_ver}/booking/get/users`,
+	`/api/v${api_ver}/booking/get/users`,
 	verifyToken,
 	searchRouteTemplate(getBookingsByUserid),
 );
 app.get(
-	`/api/${api_ver}/booking/get/desks`,
+	`/api/v${api_ver}/booking/get/desks`,
 	verifyToken,
 	searchRouteTemplate(getBookingsByDeskid),
 );
 app.put(
-	`/api/${api_ver}/booking/update`,
+	`/api/v${api_ver}/booking/update`,
 	verifyToken,
 	updateRouteTemplate(updateBooking),
 );
 app.delete(
-	`/api/${api_ver}/booking/delete`,
+	`/api/v${api_ver}/booking/delete`,
 	verifyToken,
 	deleteRouteTemplate(deleteBooking),
 );
