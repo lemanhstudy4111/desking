@@ -3,6 +3,7 @@ import { verifyJWTSchema } from "../schema/authSchema.js";
 import { returnValidationError } from "../error.js";
 import { supabase } from "../controllers/auth.js";
 import type { NextFunction, Request, Response } from "express";
+import type { unknown } from "zod";
 
 dotenv.config();
 interface JwtClaims {
@@ -67,12 +68,12 @@ export async function verifyToken(
 			);
 		}
 		const status =
-			data && (data as unknown as JwtClaims).aud
-				? (data as unknown as JwtClaims).aud
+			data && (data.claims as unknown as JwtClaims)?.aud
+				? (data.claims as unknown as JwtClaims).aud
 				: "none";
 		if (status != "authenticated") {
 			console.log(
-				`User not authenticated or something went wrong when getting status. Data ${data}`,
+				`User not authenticated or something went wrong when getting status. Data ${JSON.stringify(data)}`,
 			);
 			throw new Error(
 				"User not authenticated or something went wrong when getting status",

@@ -18,16 +18,20 @@ import { api_ver } from "../index.js";
 
 export const bookingRouter = Router();
 
-bookingRouter.post(`create`, verifyToken, postRouteTemplate(createBooking));
+bookingRouter.post(`/create`, verifyToken, postRouteTemplate(createBooking));
 bookingRouter.get(
-	`get/users`,
+	`/get/users`,
 	verifyToken,
 	searchRouteTemplate(getBookingsByUserid),
 );
 bookingRouter.get(
-	`get/desks`,
+	`/get/desks`,
 	verifyToken,
 	searchRouteTemplate(getBookingsByDeskid),
 );
-bookingRouter.put(`update`, verifyToken, updateRouteTemplate(updateBooking));
-bookingRouter.delete(`delete`, verifyToken, deleteRouteTemplate(deleteBooking));
+bookingRouter.put(`/update`, verifyToken, updateRouteTemplate(updateBooking));
+bookingRouter.delete(
+	`/delete`,
+	verifyToken,
+	deleteRouteTemplate(deleteBooking),
+);

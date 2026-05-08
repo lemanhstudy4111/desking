@@ -1,4 +1,4 @@
-import { success } from "zod";
+import { success, ZodError } from "zod";
 
 export function returnSuccess(data: any) {
 	return {
@@ -10,14 +10,20 @@ export function returnSuccess(data: any) {
 export function returnGeneralError(err: any) {
 	return {
 		success: "false",
-		message: `Something went wrong. Err: ${err}`,
+		message: `Something went wrong.`,
+		error: err,
 	};
 }
 
-export function returnValidationError(err: any) {
+export function returnValidationError(
+	err: ZodError | any,
+	errName: string = "custom validation",
+) {
 	return {
 		success: "false",
-		message: `Validation Error: ${err}`,
+		message: `Validation Error`,
+		errorName: err.name ?? errName,
+		zodErrorIssue: err.issues ? err.issues : "none",
 	};
 }
 

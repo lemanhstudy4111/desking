@@ -5,8 +5,16 @@ export const createBookingSchema = z
 	.object({
 		userid: z.uuidv4(),
 		deskid: z.int(),
-		start_date: z.iso.datetime({ precision: -1 }),
-		end_date: z.iso.datetime({ precision: -1 }),
+		start_date: z.preprocess((val) => {
+			const dateVal = new Date(val as string).toISOString();
+			console.log(dateVal);
+			return dateVal;
+		}, z.iso.datetime()),
+		end_date: z.preprocess((val) => {
+			const dateVal = new Date(val as string).toISOString();
+			console.log(dateVal);
+			return dateVal;
+		}, z.iso.datetime()),
 	})
 	.refine(
 		({ start_date, end_date }) => validateOneHourBookTime(start_date, end_date),
@@ -20,9 +28,30 @@ export const getBookingByUseridSchema = z
 		userid: z.array(z.uuidv4()),
 		status: z.array(z.int().min(1)).optional(),
 		deskid: z.array(z.int()).optional(),
-		start_date: z.iso.datetime({ precision: -1 }).optional(),
-		end_date: z.iso.datetime({ precision: -1 }).optional(),
-		created_on: z.iso.datetime({ precision: -1 }).optional(),
+		start_date: z
+			.preprocess((val) => {
+				const dateVal = new Date(val as string).toISOString();
+				console.log(dateVal);
+				return dateVal;
+			}, z.iso.datetime())
+
+			.optional(),
+		end_date: z
+			.preprocess((val) => {
+				const dateVal = new Date(val as string).toISOString();
+				console.log(dateVal);
+				return dateVal;
+			}, z.iso.datetime())
+
+			.optional(),
+		created_on: z
+			.preprocess((val) => {
+				const dateVal = new Date(val as string).toISOString();
+				console.log(dateVal);
+				return dateVal;
+			}, z.iso.datetime())
+
+			.optional(),
 	})
 	.refine(
 		({ status, deskid, start_date, end_date, created_on }) =>
@@ -37,9 +66,30 @@ export const getBookingsByDeskidSchema = z
 		userid: z.array(z.uuidv4()).optional(),
 		status: z.array(z.int().min(1)).optional(),
 		deskid: z.array(z.int()),
-		start_date: z.iso.datetime({ precision: -1 }).optional(),
-		end_date: z.iso.datetime({ precision: -1 }).optional(),
-		created_on: z.iso.datetime({ precision: -1 }).optional(),
+		start_date: z
+			.preprocess((val) => {
+				const dateVal = new Date(val as string).toISOString();
+				console.log(dateVal);
+				return dateVal;
+			}, z.iso.datetime())
+
+			.optional(),
+		end_date: z
+			.preprocess((val) => {
+				const dateVal = new Date(val as string).toISOString();
+				console.log(dateVal);
+				return dateVal;
+			}, z.iso.datetime())
+
+			.optional(),
+		created_on: z
+			.preprocess((val) => {
+				const dateVal = new Date(val as string).toISOString();
+				console.log(dateVal);
+				return dateVal;
+			}, z.iso.datetime())
+
+			.optional(),
 	})
 	.refine(
 		({ status, deskid, start_date, end_date, created_on }) =>
@@ -52,9 +102,30 @@ export const getBookingsByDeskidSchema = z
 export const getAllBookingsSchema = z
 	.object({
 		status: z.array(z.int().min(1)).optional(),
-		start_date: z.iso.datetime({ precision: -1 }).optional(),
-		end_date: z.iso.datetime({ precision: -1 }).optional(),
-		created_on: z.iso.datetime({ precision: -1 }).optional(),
+		start_date: z
+			.preprocess((val) => {
+				const dateVal = new Date(val as string).toISOString();
+				console.log(dateVal);
+				return dateVal;
+			}, z.iso.datetime())
+
+			.optional(),
+		end_date: z
+			.preprocess((val) => {
+				const dateVal = new Date(val as string).toISOString();
+				console.log(dateVal);
+				return dateVal;
+			}, z.iso.datetime())
+
+			.optional(),
+		created_on: z
+			.preprocess((val) => {
+				const dateVal = new Date(val as string).toISOString();
+				console.log(dateVal);
+				return dateVal;
+			}, z.iso.datetime())
+
+			.optional(),
 	})
 	.refine(
 		({ status, start_date, end_date, created_on }) =>
@@ -68,8 +139,15 @@ export const updateBookingSchema = z
 	.object({
 		id: z.uuidv4(),
 		deskid: z.array(z.int()),
-		start_date: z.iso.datetime({ precision: -1 }),
-		end_date: z.iso.datetime({ precision: -1 }),
+		start_date: z.preprocess((val) => {
+			const dateVal = new Date(val as string).toISOString();
+			console.log(dateVal);
+			return dateVal;
+		}, z.iso.datetime()),
+		end_date: z.preprocess(
+			(val) => new Date(val as string).toISOString(),
+			z.iso.datetime(),
+		),
 	})
 	.refine(
 		({ start_date, end_date }) => validateOneHourBookTime(start_date, end_date),

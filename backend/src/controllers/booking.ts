@@ -1,4 +1,3 @@
-import { success } from "zod";
 import sql from "../db.js";
 import {
 	createBookingSchema,
@@ -33,22 +32,25 @@ export async function createBooking(booking: BookingType) {
 		const { userid, deskid, start_date, end_date } = parsedParams.data;
 		const createdBooking = await sql.begin(async (sql) => {
 			const isDeskBooked = await sql`
-				SELECT EXISTS(SELECT 1 FROM booked_desks_with_names
+				SELECT EXISTS(SELECT 1 FROM "booked_desks_with_names" b
 				WHERE deskid = ${deskid} 
 					AND (${end_date} >= b.end_date and ${start_date} <= b.start_date) 
 					OR (${start_date} between b.start_date and b.end_date) 
 					OR (${end_date} between b.start_date and b.end_date))
 			`;
+			console.log("isDeskBooked", isDeskBooked);
 			if (
 				isDeskBooked &&
 				isDeskBooked.length > 0 &&
-				isDeskBooked[0]?.["exists"] == "true"
+				isDeskBooked[0]?.["exists"]
 			) {
+				console.log(isDeskBooked[0]["exists"]);
 				return returnOpFailed("Desk is already reserved");
 			}
 			const created = await sql`
-				INSERT INTO booking (userid, status, deskid, start_date, end_date)
+				INSERT INTO "booking" (userid, status, deskid, start_date, end_date)
 				VALUES (${userid}, 2, ${deskid}, ${start_date}, ${end_date})
+				RETURNING id, userid, deskid, status, start_date, end_date, created_on
 			`;
 			return returnSuccess(created);
 		});
