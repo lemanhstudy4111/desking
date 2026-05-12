@@ -21,14 +21,22 @@ interface BookingType {
 	createdOn: Date | undefined;
 }
 
+async function isAdmin(userid: string) {
+	const role = await sql`SELECT role FROM "users" WHERE id=${userid}`;
+	return role && role.length > 0 && role[0]?.["role"] == 2;
+}
+
 //create
-export async function createBooking(booking: BookingType) {
+export async function createBooking(booking: BookingType, queryUser: string) {
 	try {
 		const parsedParams = createBookingSchema.safeParse(booking);
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
 		}
 		const { userid, deskid, start_date, end_date } = parsedParams.data;
+		if (queryUser != userid && !(await isAdmin(queryUser))) {
+			return returnOpFailed("Forbidden action.", 403);
+		}
 		const createdBooking = await sql.begin(async (sql) => {
 			const isDeskBooked = await sql`
 				SELECT EXISTS(SELECT 1 FROM "booked_desks_with_names" b
@@ -221,7 +229,11 @@ export async function getAllBookings(
 }
 */
 //update
-export async function updateBooking(bookingId: string, newBooking: any) {
+export async function updateBooking(
+	bookingId: string,
+	newBooking: any,
+	queryUser: string,
+) {
 	try {
 		const parsedParams = updateBookingSchema.safeParse({
 			id: bookingId,
@@ -231,9 +243,20 @@ export async function updateBooking(bookingId: string, newBooking: any) {
 			return returnValidationError(parsedParams.error);
 		}
 		const { deskid, start_date, end_date } = parsedParams.data;
+		const ownerOfBooking = await sql`
+			SELECT userid FROM "booking" WHERE id=${bookingId}
+		`;
+		if (
+			!ownerOfBooking ||
+			ownerOfBooking.length == 0 ||
+			ownerOfBooking[0]?.["userid"] != queryUser
+		) {
+			if (!(await isAdmin(queryUser)))
+				return returnOpFailed("Forbidden action.", 403);
+		}
 		const updatedBooking = await sql.begin(async (sql) => {
 			const isDeskBooked = await sql`
-				SELECT EXISTS(SELECT 1 FROM booked_desks_with_names
+				SELECT EXISTS(SELECT 1 FROM booked_desks_with_names b
 				WHERE deskid = ${deskid} 
 					AND (${end_date} >= b.end_date and ${start_date} <= b.start_date) 
 					OR (${start_date} between b.start_date and b.end_date) 
@@ -249,6 +272,7 @@ export async function updateBooking(bookingId: string, newBooking: any) {
 			const created = await sql`
 				UPDATE booking SET deskid = ${deskid}, start_date = ${start_date}, end_date = ${end_date}
 				WHERE deskid = ${deskid}
+				RETURNING id, userid, deskid, status, start_date, end_date, created_on
 			`;
 			return returnSuccess(created);
 		});
@@ -259,13 +283,24 @@ export async function updateBooking(bookingId: string, newBooking: any) {
 }
 
 //delete
-export async function deleteBooking(bookingId: string) {
+export async function deleteBooking(bookingId: string, queryUser: string) {
 	try {
 		const parsedParams = updateBookingSchema.safeParse({
 			id: bookingId,
 		});
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
+		}
+		const ownerOfBooking = await sql`
+			SELECT userid FROM "booking" WHERE id=${bookingId}
+		`;
+		if (
+			!ownerOfBooking ||
+			ownerOfBooking.length == 0 ||
+			ownerOfBooking[0]?.["userid"] != queryUser
+		) {
+			if (!(await isAdmin(queryUser)))
+				return returnOpFailed("Forbidden action.", 403);
 		}
 		const deletedBooking = await sql`
 			DELETE FROM booking

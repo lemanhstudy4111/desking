@@ -27,9 +27,10 @@ export function returnValidationError(
 	};
 }
 
-export function returnOpFailed(message: string) {
+export function returnOpFailed(message: string, code?: number) {
 	return {
 		success: "false",
+		code: code ?? 500,
 		message: message,
 	};
 }

@@ -13,7 +13,6 @@ import {
 	getAllBookings,
 	updateBooking,
 } from "../controllers/booking.js";
-import { api_ver } from "../index.js";
 
 export const bookingRouter = Router();
 

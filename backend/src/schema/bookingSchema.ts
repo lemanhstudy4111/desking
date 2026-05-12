@@ -152,7 +152,7 @@ export const getAllBookingsSchema = z
 export const updateBookingSchema = z
 	.object({
 		id: z.uuidv4(),
-		deskid: z.array(z.int()),
+		deskid: z.int(),
 		start_date: z.preprocess((val) => {
 			const dateVal = new Date(val as string).toISOString();
 			console.log(dateVal);
