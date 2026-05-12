@@ -16,16 +16,19 @@ interface SuccessResponse {
 export function searchRouteTemplate(fn: any) {
 	return async (req: Request, res: Response) => {
 		try {
-			if (!req || !req.params) {
+			if (!req || !req.query) {
 				return res.status(400).send({
 					message: "Invalid request.",
 				});
 			}
-			const params = { ...req.params };
+			const { page, count, ...params } = req.query;
 			const result: ErrorResponse | SuccessResponse = await fn(
 				params,
-				req.params,
+				page,
+				count,
+				req.body["token"]!["claims"]!["sub"],
 			);
+			console.log(result);
 			if (!result.success) {
 				console.log(result);
 				return res.status(500).send({

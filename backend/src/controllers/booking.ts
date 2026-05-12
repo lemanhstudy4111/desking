@@ -1,7 +1,6 @@
 import sql from "../db.js";
 import {
 	createBookingSchema,
-	getBookingByUseridSchema,
 	getAllBookingsSchema,
 	getBookingsByDeskidSchema,
 	updateBookingSchema,
@@ -38,13 +37,11 @@ export async function createBooking(booking: BookingType) {
 					OR (${start_date} between b.start_date and b.end_date) 
 					OR (${end_date} between b.start_date and b.end_date))
 			`;
-			console.log("isDeskBooked", isDeskBooked);
 			if (
 				isDeskBooked &&
 				isDeskBooked.length > 0 &&
 				isDeskBooked[0]?.["exists"]
 			) {
-				console.log(isDeskBooked[0]["exists"]);
 				return returnOpFailed("Desk is already reserved");
 			}
 			const created = await sql`
@@ -78,7 +75,7 @@ export async function createWaitlistBooking(booking: BookingType) {
 }
 
 //read
-export async function getBookingsByUserid(
+export async function getAllBookings(
 	params: {
 		userid: string[];
 		deskid: number[] | undefined;
@@ -89,35 +86,36 @@ export async function getBookingsByUserid(
 	},
 	page: number,
 	count: number = 10,
+	queryUser?: string,
 ) {
 	try {
-		const parsedParams = getBookingByUseridSchema.safeParse(params);
+		const parsedParams = getAllBookingsSchema.safeParse(params);
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
 		}
+
 		const { userid, deskid, start_date, end_date, status, created_on } =
 			parsedParams.data;
-		const startDateFrom = (x: string) => sql`and start_date >= ${sql(x)}`;
-		const endDateTo = (x: string) => sql`and end_date <= ${sql(x)}`;
+		const startDateFrom = (from: string, to: string) =>
+			sql`and start_date between ${new Date(from)}::timestamptz and ${new Date(to)}::timestamptz`;
+		const endDateTo = (from: string, to: string) =>
+			sql`and end_date between ${new Date(from)}::timestamptz and ${new Date(to)}::timestamptz`;
 		const statusIs = (x: number[]) => sql`and status in ${sql(x)}`;
 		const deskidIs = (x: number[]) => sql`and deskid in ${sql(x)}`;
-		const createdOnBetween = (from: Date, to: Date) =>
-			sql`and createdOn between ${from} and ${to}`;
+		const createdOnBetween = (from: string, to: string) =>
+			sql`and createdOn between ${new Date(from)}::timestamptz and ${new Date(to)}::timestamptz`;
 		const bookingsByUser = await sql`
-            SELECT *
-            FROM booking
-            WHERE userid in ${sql(userid)} ${
-							deskid ? deskidIs(deskid) : sql``
-						} ${start_date ? startDateFrom(start_date) : sql``} ${
-							end_date ? endDateTo(end_date) : sql``
-						} ${status ? statusIs(status) : sql``} ${
-							created_on && created_on.length == 2
-								? createdOnBetween(
-										created_on[0] as unknown as Date,
-										created_on[1] as unknown as Date,
-									)
-								: sql``
-						}
+			SELECT *
+			FROM booking
+			WHERE status ${status ? statusIs(status) : sql`=2`} ${userid ? sql(userid) : sql``} ${
+				deskid ? deskidIs(deskid) : sql``
+			} ${start_date && end_date ? startDateFrom(start_date, end_date) : sql``} ${
+				start_date && end_date ? endDateTo(start_date, end_date) : sql``
+			} ${
+				created_on && Array.isArray(created_on) && created_on.length == 2
+					? createdOnBetween(created_on[0], created_on[1])
+					: sql``
+			}
             LIMIT ${count}
             OFFSET ${(page - 1) * count}
         `;
@@ -126,7 +124,7 @@ export async function getBookingsByUserid(
 		return returnGeneralError(err);
 	}
 }
-
+/*
 export async function getBookingsByDeskid(
 	params: {
 		deskid: string[];
@@ -176,6 +174,7 @@ export async function getBookingsByDeskid(
 	}
 }
 
+
 export async function getAllBookings(
 	params: {
 		start_date: Date | undefined;
@@ -220,7 +219,7 @@ export async function getAllBookings(
 		return returnGeneralError(err);
 	}
 }
-
+*/
 //update
 export async function updateBooking(bookingId: string, newBooking: any) {
 	try {

@@ -23,34 +23,34 @@ export const createBookingSchema = z
 		},
 	);
 
-export const getBookingByUseridSchema = z
+export const getAllBookingsSchema = z
 	.object({
-		userid: z.array(z.uuidv4()),
-		status: z.array(z.int().min(1)).optional(),
-		deskid: z.array(z.int()).optional(),
+		userid: z.preprocess(
+			(val) => (val ? JSON.parse(val as string) : undefined),
+			z.array(z.uuidv4()).min(1).optional(),
+		),
+		status: z.preprocess(
+			(val) => (val ? JSON.parse(val as string) : undefined),
+			z.array(z.int().min(1)).optional(),
+		),
+		deskid: z.preprocess(
+			(val) => (val ? JSON.parse(val as string) : undefined),
+			z.array(z.int()).min(1).optional(),
+		),
 		start_date: z
 			.preprocess((val) => {
-				const dateVal = new Date(val as string).toISOString();
-				console.log(dateVal);
-				return dateVal;
+				return new Date(val as string).toISOString();
 			}, z.iso.datetime())
-
 			.optional(),
 		end_date: z
 			.preprocess((val) => {
-				const dateVal = new Date(val as string).toISOString();
-				console.log(dateVal);
-				return dateVal;
+				return new Date(val as string).toISOString();
 			}, z.iso.datetime())
-
 			.optional(),
 		created_on: z
 			.preprocess((val) => {
-				const dateVal = new Date(val as string).toISOString();
-				console.log(dateVal);
-				return dateVal;
+				return new Date(val as string).toISOString();
 			}, z.iso.datetime())
-
 			.optional(),
 	})
 	.refine(
@@ -63,9 +63,18 @@ export const getBookingByUseridSchema = z
 
 export const getBookingsByDeskidSchema = z
 	.object({
-		userid: z.array(z.uuidv4()).optional(),
-		status: z.array(z.int().min(1)).optional(),
-		deskid: z.array(z.int()),
+		userid: z.preprocess(
+			(val) => (val ? JSON.parse(val as string) : []),
+			z.array(z.uuidv4()).optional(),
+		),
+		status: z.preprocess(
+			(val) => (val ? JSON.parse(val as string) : []),
+			z.array(z.int().min(1)).optional(),
+		),
+		deskid: z.preprocess(
+			(val) => (val ? JSON.parse(val as string) : []),
+			z.array(z.int()),
+		),
 		start_date: z
 			.preprocess((val) => {
 				const dateVal = new Date(val as string).toISOString();
@@ -99,9 +108,13 @@ export const getBookingsByDeskidSchema = z
 		},
 	);
 
+/*
 export const getAllBookingsSchema = z
 	.object({
-		status: z.array(z.int().min(1)).optional(),
+		status: z.preprocess(
+			(val) => (val ? JSON.parse(val as string) : []),
+			z.array(z.int().min(1)).optional(),
+		),
 		start_date: z
 			.preprocess((val) => {
 				const dateVal = new Date(val as string).toISOString();
@@ -134,6 +147,7 @@ export const getAllBookingsSchema = z
 			error: "At least one parameter for booking filtering.",
 		},
 	);
+*/
 
 export const updateBookingSchema = z
 	.object({

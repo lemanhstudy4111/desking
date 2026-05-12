@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import helmet from "helmet";
 import { authRouter } from "./routes/auth.js";
 import { bookingRouter } from "./routes/booking.js";
+import { verifyToken } from "./middleware/authMiddleware.js";
 dotenv.config();
 
 export const app = express();
@@ -14,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(helmet());
 
 app.use(`/api/v${api_ver}/auth`, authRouter);
-app.use(`/api/v${api_ver}/booking`, bookingRouter);
+app.use(`/api/v${api_ver}/booking`, verifyToken, bookingRouter);
 
 app.get(`/api/v${api_ver}/`, (req, res) => {
 	res.send("Hello World!");
