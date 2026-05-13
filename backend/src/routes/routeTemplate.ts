@@ -16,16 +16,19 @@ interface SuccessResponse {
 export function searchRouteTemplate(fn: any) {
 	return async (req: Request, res: Response) => {
 		try {
-			if (!req || !req.params) {
+			if (!req || !req.query) {
 				return res.status(400).send({
 					message: "Invalid request.",
 				});
 			}
-			const params = { ...req.params };
+			const { page, count, ...params } = req.query;
 			const result: ErrorResponse | SuccessResponse = await fn(
 				params,
-				req.params,
+				page,
+				count,
+				req.body["token"]!["claims"]!["sub"],
 			);
+			console.log(result);
 			if (!result.success) {
 				console.log(result);
 				return res.status(500).send({
@@ -51,7 +54,10 @@ export function postRouteTemplate(fn: any) {
 					message: "Invalid request.",
 				});
 			}
-			const result: ErrorResponse | SuccessResponse = await fn(req.body);
+			const result: ErrorResponse | SuccessResponse = await fn(
+				req.body,
+				req.body["token"]!["claims"]!["sub"],
+			);
 			if (!result.success) {
 				console.log(result);
 				return res.status(500).send({
@@ -72,14 +78,15 @@ export function postRouteTemplate(fn: any) {
 export function updateRouteTemplate(fn: any) {
 	return async (req: Request, res: Response) => {
 		try {
-			if (!req || !req.body || !req.params.updateid) {
+			if (!req || !req.body || !req.query.updateid) {
 				return res.status(400).send({
 					message: "Invalid request.",
 				});
 			}
 			const result: ErrorResponse | SuccessResponse = await fn(
-				req.params.updateid,
+				req.query.updateid,
 				req.body,
+				req.body["token"]!["claims"]!["sub"],
 			);
 			if (!result.success) {
 				console.log(result);
@@ -101,13 +108,14 @@ export function updateRouteTemplate(fn: any) {
 export function deleteRouteTemplate(fn: any) {
 	return async (req: Request, res: Response) => {
 		try {
-			if (!req || !req.params || !req.params.deleteid) {
+			if (!req || !req.params || !req.query.deleteid) {
 				return res.status(400).send({
 					message: "Invalid request.",
 				});
 			}
 			const result: ErrorResponse | SuccessResponse = await fn(
-				req.params.deleteid,
+				req.query.deleteid,
+				req.body["token"]!["claims"]!["sub"],
 			);
 			if (!result.success) {
 				console.log(result);

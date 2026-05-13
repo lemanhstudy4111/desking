@@ -1,3 +1,5 @@
+import sql from "./db.js";
+
 export function camelToSnakeCase(str: string) {
 	let res = "";
 	for (let i = 0; i < str.length; i++) {
@@ -22,4 +24,9 @@ export function validateOneHourBookTime(
 		console.log(`Date validation failed: ${err}`);
 		return false;
 	}
+}
+
+export async function isAdmin(userid: string) {
+	const role = await sql`SELECT role FROM "users" WHERE id=${userid}`;
+	return role && role.length > 0 && role[0]?.["role"] == 2;
 }
