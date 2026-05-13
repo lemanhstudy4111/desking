@@ -1,9 +1,9 @@
-import { success } from "zod";
 import sql from "../db.js";
 import {
 	createDeskSchema,
 	deleteDeskSchema,
-	getAllDesksStartDateEndDate,
+	getAllDeskInfoSchema,
+	getAllDesksStartDateEndDateSchema,
 	updateDeskSchema,
 } from "../schema/deskSchema.js";
 import {
@@ -33,6 +33,7 @@ export async function createDesk(desk: DeskType, queryUser: string) {
 		}
 		const deskCreated = await sql`
             INSERT INTO desk ${sql(desk, Object.keys(parsedData) as any)}
+			RETURNING id, name, description, start_hour, end_hour
         `;
 		return returnSuccess(deskCreated);
 	} catch (err) {
@@ -51,14 +52,14 @@ export async function getAllDesksInfo(
 	count: number = 10,
 ) {
 	try {
-		const parsedParams = createDeskSchema.safeParse(params);
+		const parsedParams = getAllDeskInfoSchema.safeParse(params);
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
 		}
 		const { name, description, start_hour, end_hour } = parsedParams.data;
-		const nameIs = (x: string) => sql`AND name LIKE '${x}'`;
+		const nameIs = (x: string) => sql`AND name LIKE ${`%${x}%`}`;
 		const descriptionHas = (x: string) =>
-			sql`AND description LIKE '%${x}$' COLLATE case_insensitive true`;
+			sql`AND LOWER(description) LIKE ${`%${x}%`}`;
 		const startHourFrom = (x: string) => sql`AND start_hour >= ${sql(x)}`;
 		const endHourTo = (x: string) => sql`AND end_hour <= ${sql(x)}`;
 		const allDesks = await sql`
@@ -86,7 +87,7 @@ export async function getAllDesksWithStatus(
 	count: number = 10,
 ) {
 	try {
-		const parsedParams = getAllDesksStartDateEndDate.safeParse(params);
+		const parsedParams = getAllDesksStartDateEndDateSchema.safeParse(params);
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
 		}
@@ -112,7 +113,7 @@ export async function getAllAvailableDesks(
 	count: number = 10,
 ) {
 	try {
-		const parsedParams = getAllDesksStartDateEndDate.safeParse(params);
+		const parsedParams = getAllDesksStartDateEndDateSchema.safeParse(params);
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
 		}
@@ -147,10 +148,12 @@ export async function updateDesk(
 		if (!(await isAdmin(queryUser))) {
 			return returnOpFailed("Forbidden action.", 403);
 		}
-		const cols = Object(newDeskInfo).keys();
+		const { token, ...desksInfo } = newDeskInfo;
+		const cols = Object.keys(desksInfo);
 		const updatedDesk = await sql`
-			UPDATE desk SET ${sql(newDeskInfo, cols)}
+			UPDATE desk SET ${sql(desksInfo, cols)}
 			WHERE id = ${deskid}
+			RETURNING id, name, description, start_hour, end_hour
 		`;
 		return returnSuccess(updatedDesk);
 	} catch (err) {
@@ -159,10 +162,10 @@ export async function updateDesk(
 }
 
 //delete
-export async function deleteDesk(bookingId: string, queryUser: string) {
+export async function deleteDesk(deskid: string, queryUser: string) {
 	try {
 		const parsedParams = deleteDeskSchema.safeParse({
-			id: bookingId,
+			id: deskid,
 		});
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
@@ -171,8 +174,8 @@ export async function deleteDesk(bookingId: string, queryUser: string) {
 			return returnOpFailed("Forbidden action.", 403);
 		}
 		const deletedDesk = await sql`
-			DELETE FROM booking
-			WHERE id = ${bookingId}
+			DELETE FROM desk
+			WHERE id = ${deskid}
 		`;
 		return returnSuccess(deletedDesk);
 	} catch (err) {

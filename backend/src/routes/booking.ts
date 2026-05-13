@@ -16,19 +16,14 @@ import {
 
 export const bookingRouter = Router();
 
-bookingRouter.post(`/create`, verifyToken, postRouteTemplate(createBooking));
+bookingRouter.post(`/create`, postRouteTemplate(createBooking));
 /*
 bookingRouter.get(`/get/users`, searchRouteTemplate(getBookingsByUserid));
 bookingRouter.get(
-	`/get/desks`,
-	verifyToken,
+	`/get/desks`,,
 	searchRouteTemplate(getBookingsByDeskid),
 );
 */
-bookingRouter.get(`/get`, verifyToken, searchRouteTemplate(getAllBookings));
-bookingRouter.put(`/update`, verifyToken, updateRouteTemplate(updateBooking));
-bookingRouter.delete(
-	`/delete`,
-	verifyToken,
-	deleteRouteTemplate(deleteBooking),
-);
+bookingRouter.get(`/get`, searchRouteTemplate(getAllBookings));
+bookingRouter.put(`/update`, updateRouteTemplate(updateBooking));
+bookingRouter.delete(`/delete`, deleteRouteTemplate(deleteBooking));
