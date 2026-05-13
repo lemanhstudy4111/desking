@@ -8,9 +8,11 @@ import {
 } from "../schema/deskSchema.js";
 import {
 	returnGeneralError,
+	returnOpFailed,
 	returnSuccess,
 	returnValidationError,
 } from "../error.js";
+import { isAdmin } from "../utils.js";
 
 interface DeskType {
 	name: string;
@@ -19,13 +21,16 @@ interface DeskType {
 	end_hour: string;
 }
 
-export async function createDesk(desk: DeskType) {
+export async function createDesk(desk: DeskType, queryUser: string) {
 	try {
 		const parsedParams = createDeskSchema.safeParse(desk);
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
 		}
 		const parsedData = parsedParams.data;
+		if (!(await isAdmin(queryUser))) {
+			return returnOpFailed("Forbidden action.", 403);
+		}
 		const deskCreated = await sql`
             INSERT INTO desk ${sql(desk, Object.keys(parsedData) as any)}
         `;
@@ -126,7 +131,11 @@ export async function getAllAvailableDesks(
 }
 
 //update
-export async function updateDesk(deskid: number, newDeskInfo: any) {
+export async function updateDesk(
+	deskid: number,
+	newDeskInfo: any,
+	queryUser: string,
+) {
 	try {
 		const parsedParams = updateDeskSchema.safeParse({
 			id: deskid,
@@ -134,6 +143,9 @@ export async function updateDesk(deskid: number, newDeskInfo: any) {
 		});
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
+		}
+		if (!(await isAdmin(queryUser))) {
+			return returnOpFailed("Forbidden action.", 403);
 		}
 		const cols = Object(newDeskInfo).keys();
 		const updatedDesk = await sql`
@@ -147,13 +159,16 @@ export async function updateDesk(deskid: number, newDeskInfo: any) {
 }
 
 //delete
-export async function deleteDesk(bookingId: string) {
+export async function deleteDesk(bookingId: string, queryUser: string) {
 	try {
 		const parsedParams = deleteDeskSchema.safeParse({
 			id: bookingId,
 		});
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
+		}
+		if (!(await isAdmin(queryUser))) {
+			return returnOpFailed("Forbidden action.", 403);
 		}
 		const deletedDesk = await sql`
 			DELETE FROM booking
