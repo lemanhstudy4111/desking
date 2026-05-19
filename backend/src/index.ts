@@ -19,10 +19,6 @@ app.use(`/api/v${api_ver}/auth`, authRouter);
 app.use(`/api/v${api_ver}/booking`, verifyToken, bookingRouter);
 app.use(`/api/v${api_ver}/desks`, verifyToken, desksRouter);
 
-app.get(`/api/v${api_ver}/`, (req, res) => {
-	res.send("Hello World!");
-});
-
 app.listen(port, () => {
 	console.log(`App listening on port ${port}`);
 });
