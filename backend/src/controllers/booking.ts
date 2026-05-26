@@ -129,6 +129,7 @@ export async function getAllBookings(
 		return returnGeneralError(err);
 	}
 }
+
 /*
 export async function getBookingsByDeskid(
 	params: {

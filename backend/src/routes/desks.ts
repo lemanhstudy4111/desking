@@ -11,6 +11,7 @@ import {
 	getAllAvailableDesks,
 	getAllDesksInfo,
 	getAllDesksWithStatus,
+	getUnavailableDaysByDesks,
 	updateDesk,
 } from "../controllers/desks.js";
 
@@ -20,5 +21,9 @@ desksRouter.post(`/create`, postRouteTemplate(createDesk));
 desksRouter.get(`/get/info`, searchRouteTemplate(getAllDesksInfo));
 desksRouter.get(`/get/status`, searchRouteTemplate(getAllDesksWithStatus));
 desksRouter.get(`/get/available`, searchRouteTemplate(getAllAvailableDesks));
+desksRouter.get(
+	`/get/booked-dates`,
+	searchRouteTemplate(getUnavailableDaysByDesks),
+);
 desksRouter.put(`/update`, updateRouteTemplate(updateDesk));
 desksRouter.delete(`/delete`, deleteRouteTemplate(deleteDesk));

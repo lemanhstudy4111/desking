@@ -4,6 +4,7 @@ import {
 	deleteDeskSchema,
 	getAllDeskInfoSchema,
 	getAllDesksStartDateEndDateSchema,
+	getDeskUnavailableDaysSchema,
 	updateDeskSchema,
 } from "../schema/deskSchema.js";
 import {
@@ -126,6 +127,31 @@ export async function getAllAvailableDesks(
 			OFFSET ${(page - 1) * count}
 		`;
 		return returnSuccess(allDeskStatus);
+	} catch (err) {
+		return returnGeneralError(err);
+	}
+}
+
+export async function getUnavailableDaysByDesks(
+	params: {
+		deskid: number;
+		start_date: Date | string;
+		end_date: Date | string;
+	},
+	page: number = 1,
+	count: number = 10,
+) {
+	try {
+		const parsedParams = getDeskUnavailableDaysSchema.safeParse(params);
+		if (!parsedParams.success) {
+			return returnValidationError(parsedParams.error);
+		}
+		const { deskid, start_date, end_date } = parsedParams.data;
+		const unavailableDays = await sql`
+			SELECT id, start_date, end_date FROM all_desks_status
+			WHERE deskid = ${deskid} AND ${start_date} BETWEEN start_date and end_date AND ${end_date} BETWEEN start_date and end_date
+		`;
+		return unavailableDays;
 	} catch (err) {
 		return returnGeneralError(err);
 	}
