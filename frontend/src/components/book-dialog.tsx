@@ -10,7 +10,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Calendar } from "@/components/ui/calendar"
-import { useState, useEffect, useRef, type SubmitEventHandler } from "react"
+import { useState, useEffect, useRef } from "react"
 import { fetchData } from "@/services/fetch"
 import { Loading } from "./loading"
 
@@ -21,7 +21,6 @@ export function BookingDialog({ deskid }: { deskid: string }) {
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date())
   const [bookedDates, setBookedDates] = useState<Date[]>([] as Date[])
   const [open, setOpen] = useState<boolean>(false)
-  const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const isFetching = useRef(false)
@@ -53,11 +52,16 @@ export function BookingDialog({ deskid }: { deskid: string }) {
           "GET",
           undefined
         )
-        if (!newData || !newData.success || newData.success == "false")
+        if (
+          !newData ||
+          !newData.success ||
+          newData.success != "true" ||
+          !newData.data
+        )
           throw new Error(
             `Something went wrong when fetching data. Err: ${JSON.stringify(newData)}`
           )
-        setData((prev) => newData) // Functional update
+        setBookedDates((prev) => newData.data) // Functional update
       } catch (err) {
         setError((err as Error).message)
         console.error("API error:", err)
@@ -95,6 +99,8 @@ export function BookingDialog({ deskid }: { deskid: string }) {
               emptyContent="Please wait while booking page is loading. Do not refresh the page."
               includeSpinner={true}
             ></Loading>
+          ) : error ? (
+            <div>Something went wrong</div>
           ) : (
             <>
               <DialogHeader>
