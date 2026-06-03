@@ -1,6 +1,7 @@
 import sql from "../db.js";
 import {
 	createBookingSchema,
+	createMultipleBookingsSchema,
 	deleteBookingSchema,
 	getAllBookingsSchema,
 	getBookingsByDeskidSchema,
@@ -13,6 +14,7 @@ import {
 	returnValidationError,
 } from "../error.js";
 import { isAdmin } from "../utils.js";
+import { unknown } from "zod";
 
 interface BookingType {
 	id: string | undefined;
@@ -34,30 +36,41 @@ export async function createBooking(booking: BookingType, queryUser: string) {
 		if (queryUser != userid && !(await isAdmin(queryUser))) {
 			return returnOpFailed("Forbidden action.", 403);
 		}
-		const createdBooking = await sql.begin(async (sql) => {
-			const isDeskBooked = await sql`
-				SELECT EXISTS(SELECT 1 FROM "booked_desks_with_names" b
-				WHERE deskid = ${deskid} 
-					AND (${end_date} >= b.end_date and ${start_date} <= b.start_date) 
-					OR (${start_date} between b.start_date and b.end_date) 
-					OR (${end_date} between b.start_date and b.end_date))
-			`;
-			if (
-				isDeskBooked &&
-				isDeskBooked.length > 0 &&
-				isDeskBooked[0]?.["exists"]
-			) {
-				return returnOpFailed("Desk is already reserved");
-			}
-			const created = await sql`
-				INSERT INTO "booking" (userid, status, deskid, start_date, end_date)
+		// const createdBooking = await sql.begin(async (sql) => {
+		// 	const isDeskBooked = await sql`
+		// 		SELECT EXISTS(SELECT 1 FROM "booked_desks_with_names" b
+		// 		WHERE deskid = ${deskid}
+		// 			AND ((${end_date} >= b.end_date and ${start_date} <= b.start_date)
+		// 			OR (${start_date} between b.start_date and b.end_date)
+		// 			OR (${end_date} between b.start_date and b.end_date))
+		// 	`;
+		// 	if (
+		// 		isDeskBooked &&
+		// 		isDeskBooked.length > 0 &&
+		// 		isDeskBooked[0]?.["exists"]
+		// 	) {
+		// 		return returnOpFailed("Desk is already reserved");
+		// 	}
+		// 	const created = await sql`
+		// 		INSERT INTO "booking" (userid, status, deskid, start_date, end_date)
+		// 		VALUES (${userid}, 2, ${deskid}, ${start_date}, ${end_date})
+		// 		RETURNING id, userid, deskid, status, start_date, end_date, created_on
+		// 	`;
+		// 	return returnSuccess(created);
+		// });
+		const createdBooking =
+			await sql`INSERT INTO "booking" (userid, status, deskid, start_date, end_date)
 				VALUES (${userid}, 2, ${deskid}, ${start_date}, ${end_date})
-				RETURNING id, userid, deskid, status, start_date, end_date, created_on
-			`;
-			return returnSuccess(created);
-		});
-		return createdBooking;
+		 		RETURNING id, userid, deskid, status, start_date, end_date, created_on`;
+		console.log(createdBooking);
+		return [];
 	} catch (err) {
+		if (
+			(err as unknown as any).name == "PostgresError" &&
+			(err as unknown as any).code == "23P01" &&
+			(err as unknown as any).constraint_name == "no_overlapping_timestamps"
+		)
+			return returnOpFailed("Desk is already reserved");
 		return returnGeneralError(err);
 	}
 }
