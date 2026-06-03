@@ -23,6 +23,32 @@ export const createBookingSchema = z
 		},
 	);
 
+export const createMultipleBookingsSchema = z.object({
+	userid: z.uuidv4(),
+	bookingsData: z.array(
+		z
+			.object({
+				deskid: z.int(),
+				start_date: z.preprocess((val) => {
+					const dateVal = new Date(val as string).toISOString();
+					console.log(dateVal);
+					return dateVal;
+				}, z.iso.datetime()),
+				end_date: z.preprocess((val) => {
+					const dateVal = new Date(val as string).toISOString();
+					console.log(dateVal);
+					return dateVal;
+				}, z.iso.datetime()),
+			})
+			.refine(
+				({ start_date, end_date }) =>
+					validateOneHourBookTime(start_date, end_date),
+				{
+					error: "Date validation failed.",
+				},
+			),
+	),
+});
 export const getAllBookingsSchema = z
 	.object({
 		userid: z.preprocess(
