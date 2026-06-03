@@ -61,6 +61,34 @@ export async function createBooking(booking: BookingType, queryUser: string) {
 		return returnGeneralError(err);
 	}
 }
+export async function createMultipleBookings(
+	bookings: BookingType[],
+	queryUser: string,
+) {
+	try {
+		const parsedParams = createMultipleBookingsSchema.safeParse({
+			userid: queryUser,
+			bookingData: bookings,
+		});
+		if (!parsedParams.success) {
+			return returnValidationError(parsedParams.error);
+		}
+		const { userid, bookingsData } = parsedParams.data;
+		if (queryUser != userid && !(await isAdmin(queryUser))) {
+			return returnOpFailed("Forbidden action.", 403);
+		}
+		const transformedBookings = bookingsData.map((booking) => ({
+			...booking,
+			userid: queryUser,
+		}));
+		const createdBookings =
+			await sql`INSERT INTO "booking" ${sql(transformedBookings, "userid", "deskid", "start_date", "end_date")}
+			RETURNING id, userid, deskid, status, start_date, end_date, created_on`;
+		return createdBookings;
+	} catch (err) {
+		return returnGeneralError(err);
+	}
+}
 
 export async function createWaitlistBooking(booking: BookingType) {
 	try {
