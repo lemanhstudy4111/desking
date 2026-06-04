@@ -13,8 +13,8 @@ import {
 	returnSuccess,
 	returnValidationError,
 } from "../error.js";
-import { isAdmin } from "../utils.js";
-import { unknown } from "zod";
+import { isAdmin, findAllIndicesRegex } from "../utils.js";
+import { success } from "zod";
 
 interface BookingType {
 	id: string | undefined;
@@ -71,6 +71,69 @@ export async function createBooking(booking: BookingType, queryUser: string) {
 			(err as unknown as any).constraint_name == "no_overlapping_timestamps"
 		)
 			return returnOpFailed("Desk is already reserved");
+		return returnGeneralError(err);
+	}
+}
+export async function createMultipleBookings(
+	bookings: BookingType[],
+	queryUser: string,
+) {
+	try {
+		const parsedParams = createMultipleBookingsSchema.safeParse({
+			userid: queryUser,
+			bookingsData: bookings,
+		});
+		if (!parsedParams.success) {
+			return returnValidationError(parsedParams.error);
+		}
+		const { userid, bookingsData } = parsedParams.data;
+		if (queryUser != userid && !(await isAdmin(queryUser))) {
+			return returnOpFailed("Forbidden action.", 403);
+		}
+		const transformedBookings = bookingsData.map((booking) => ({
+			...booking,
+			userid: queryUser,
+		}));
+		// const createdBookings =
+		// 	await sql`INSERT INTO "booking" ${sql(transformedBookings, "userid", "deskid", "start_date", "end_date")}
+		// 	RETURNING id, userid, deskid, status, start_date, end_date, created_on`;
+		const allBookingsAttempted = await Promise.allSettled(
+			transformedBookings.map(
+				(
+					booking,
+				) => sql`INSERT INTO "booking" (userid, status, deskid, start_date, end_date)
+				VALUES (${userid}, 2, ${booking.deskid}, ${booking.start_date}, ${booking.end_date})
+		 		RETURNING id, start_date, end_date, created_on`,
+			),
+		);
+		const createdBookings = allBookingsAttempted.filter(
+			(prom) => prom.status == "fulfilled",
+		);
+		const succeededDates = createdBookings
+			.map((success: any) => [success.start_date, success.end_date])
+			.sort();
+		if (succeededDates.length == 0) {
+			console.log(allBookingsAttempted);
+			return returnOpFailed("All operations failed.");
+		}
+		const failedDates = transformedBookings
+			.map((booking) => [booking.start_date, booking.end_date])
+			.sort()
+			.filter(
+				(datePair, i) =>
+					JSON.stringify(datePair) != JSON.stringify(succeededDates[i]),
+			);
+		return returnSuccess({
+			createdBookings: createdBookings,
+			failedBookings: failedDates,
+		});
+	} catch (err) {
+		// if (
+		// 	(err as unknown as any).name == "PostgresError" &&
+		// 	(err as unknown as any).code == "23P01" &&
+		// 	(err as unknown as any).constraint_name == "no_overlapping_timestamps"
+		// )
+		// 	return returnOpFailed("Desk is already reserved");
 		return returnGeneralError(err);
 	}
 }
