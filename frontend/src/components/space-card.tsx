@@ -8,9 +8,12 @@ import {
   CardTitle,
 } from "./ui/card"
 import imgURL from "../assets/image.png"
-import { useState } from "react"
+import { useState, type SubmitEvent } from "react"
+import { Dialog } from "radix-ui"
+import { BookingDialog } from "./book-dialog"
 
 interface SpaceCardType {
+  id: string
   name: string
   description: string
   startHour: string
@@ -43,7 +46,7 @@ export function SpaceCard(props: SpaceCardType) {
         <img src={imgURL}></img>
         <CardHeader>
           <CardAction>
-            <Button>Book Space</Button>
+            <BookingDialog deskid={props.id} />
           </CardAction>
           <CardTitle className="text-2xl">{props.name}</CardTitle>
         </CardHeader>

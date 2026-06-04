@@ -14,6 +14,16 @@ export const getAllDeskInfoSchema = z.object({
 	end_hour: z.iso.time({ precision: -1 }).optional(),
 });
 
+export const getDeskUnavailableDaysSchema = z.object({
+	deskid: z.preprocess((val) => Number(val), z.int()),
+	start_date: z.preprocess((val) => {
+		return new Date(val as string).toISOString();
+	}, z.iso.datetime()),
+	end_date: z.preprocess((val) => {
+		return new Date(val as string).toISOString();
+	}, z.iso.datetime()),
+});
+
 export const getAllDesksStartDateEndDateSchema = z.object({
 	start_date: z.preprocess((val) => {
 		return new Date(val as string).toISOString();

@@ -28,7 +28,7 @@ export async function fetchData(
   return await fetch(url, reqOptions)
     .then((res) => res.json())
     .catch((err) => ({
-      success: false,
+      success: "false",
       error: `Something went wrong on the frontend. ${JSON.stringify(err)}`,
     }))
 }
