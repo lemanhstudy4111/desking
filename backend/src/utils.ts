@@ -30,3 +30,14 @@ export async function isAdmin(userid: string) {
 	const role = await sql`SELECT role FROM "users" WHERE id=${userid}`;
 	return role && role.length > 0 && role[0]?.["role"] == 2;
 }
+
+export function findAllIndicesRegex(str: string, substr: string) {
+	const indices: number[] = [];
+	if (substr.length == 0) return indices;
+	const regex = new RegExp(substr, "gi");
+	let match;
+	while ((match = regex.exec(str)) !== null) {
+		indices.push(match.index);
+	}
+	return indices;
+}

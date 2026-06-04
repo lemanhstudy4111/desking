@@ -9,6 +9,7 @@ import {
 } from "./routeTemplate.js";
 import {
 	createBooking,
+	createMultipleBookings,
 	deleteBooking,
 	getAllBookings,
 	updateBooking,
@@ -16,7 +17,11 @@ import {
 
 export const bookingRouter = Router();
 
-bookingRouter.post(`/create`, postRouteTemplate(createBooking));
+bookingRouter.post(`/create-single`, postRouteTemplate(createBooking));
+bookingRouter.post(
+	`/create-multiple`,
+	postRouteTemplate(createMultipleBookings),
+);
 /*
 bookingRouter.get(`/get/users`, searchRouteTemplate(getBookingsByUserid));
 bookingRouter.get(
