@@ -17,9 +17,7 @@ export function Booking() {
         <h1>Book a Space</h1>
         <span>Refresh for more spaces!</span>
       </div>
-      <div>
-        <MultiSpaceCard data={mockData} />
-      </div>
+      <div>{/* <MultiSpaceCard data={mockData} /> */}</div>
     </div>
   )
 }
