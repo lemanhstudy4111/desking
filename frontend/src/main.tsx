@@ -8,24 +8,44 @@ import { createBrowserRouter } from "react-router"
 import { RouterProvider } from "react-router/dom"
 import { Booking } from "./pages/booking.tsx"
 import Layout from "./layout.tsx"
+import AuthPageLayout from "./pages/authLayout.tsx"
+import { LoginForm } from "./components/login-form.tsx"
+import { SignupForm } from "./components/signup-form.tsx"
 
 const router = createBrowserRouter([
   {
-    path: "/",
-    element: <Home />,
+    Component: AuthPageLayout,
+    children: [
+      {
+        path: "/login",
+        element: <LoginForm />,
+      },
+      {
+        path: "/signup",
+        element: <SignupForm />,
+      },
+    ],
   },
   {
-    path: "/book",
-    element: <Booking />,
+    Component: Layout,
+    children: [
+      {
+        path: "/",
+        index: true,
+        element: <Home />,
+      },
+      {
+        path: "/book",
+        element: <Booking />,
+      },
+    ],
   },
 ])
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
-      <Layout>
-        <RouterProvider router={router} />
-      </Layout>
+      <RouterProvider router={router} />
     </ThemeProvider>
   </StrictMode>
 )

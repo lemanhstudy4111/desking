@@ -4,20 +4,30 @@ import {
   SidebarTrigger,
 } from "./components/ui/sidebar"
 import { AppSidebar } from "./components/app-sidebar"
-import type { ReactElement } from "react"
+import { Outlet } from "react-router"
 
-export function App({ children }: { children: ReactElement }) {
+export default function Layout() {
   return (
     <div className="flex min-h-svh p-6">
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset>
           <SidebarTrigger className="-ml-1" />
-          {children}
+          <Outlet />
         </SidebarInset>
       </SidebarProvider>
     </div>
   )
 }
-
-export default App
+// export default function Layout() {
+//   return (
+//     <div className="flex min-h-svh p-6">
+//       <SidebarProvider>
+//         <AppSidebar />
+//         <SidebarInset>
+//           <SidebarTrigger className="-ml-1" />
+//         </SidebarInset>
+//       </SidebarProvider>
+//     </div>
+//   )
+// }
