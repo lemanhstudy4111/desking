@@ -3,7 +3,7 @@ import { verifyJWTSchema } from "../schema/authSchema.js";
 import { returnValidationError } from "../error.js";
 import { supabase } from "../controllers/auth.js";
 import type { NextFunction, Request, Response } from "express";
-import type { unknown } from "zod";
+dotenv.config();
 
 dotenv.config();
 interface JwtClaims {
@@ -35,8 +35,12 @@ export async function verifyToken(
 	next: NextFunction,
 ) {
 	try {
+		const jwtToken =
+			req.cookies[process.env.ACCESS_TOKEN_COOKIE as any]?.["data"]?.[
+				"session"
+			]?.["access_token"];
 		const parsedParams = verifyJWTSchema.safeParse({
-			token: req.header("Authorization"),
+			token: jwtToken,
 		});
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
