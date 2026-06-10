@@ -1,5 +1,9 @@
 import { Router, type Request, type Response } from "express";
-import { signInPassword, signUp } from "../controllers/auth.js";
+import {
+	setAccessCookie,
+	signInPassword,
+	signUp,
+} from "../controllers/auth.js";
 
 export const authRouter = Router();
 
@@ -37,8 +41,11 @@ authRouter.post("/signin", async (req: Request, res: Response) => {
 			console.log(result);
 			return res.status(500).send({ ...result });
 		}
+		const { user, session } = (result as unknown as any).data;
+		setAccessCookie(res, result);
 		return res.status(200).send({
-			...result,
+			success: result.success,
+			data: user,
 		});
 	} catch (err) {
 		return res.status(500).send({

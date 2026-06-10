@@ -12,12 +12,25 @@ import {
 	verifyOTPSchema,
 } from "../schema/authSchema.js";
 import dotenv from "dotenv";
+import type { Response } from "express";
 
 dotenv.config();
 export const supabase = createClient(
 	`https://${process.env.SUPABASE_PROJECT_ID}.supabase.co`,
 	process.env.SUPABASE_PUBLISHABLE_KEY!,
 );
+
+export function setAccessCookie(res: Response, token: any) {
+	const cookieName = process.env.ACCESS_TOKEN_COOKIE || "access_token";
+	const isProd = process.env.NODE_ENV == "production";
+	res.cookie(cookieName, token, {
+		httpOnly: true,
+		secure: isProd,
+		sameSite: isProd ? "none" : "lax",
+		maxAge: 15 * 60 * 1000,
+		path: "/",
+	});
+}
 
 export async function signUp(newUser: any) {
 	try {
