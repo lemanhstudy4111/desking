@@ -20,7 +20,7 @@ export const supabase = createClient(
 	process.env.SUPABASE_PUBLISHABLE_KEY!,
 );
 
-export function setAccessCookie(res: Response, token: any) {
+export function setAccessCookie(res: Response, token: string) {
 	const cookieName = process.env.ACCESS_TOKEN_COOKIE || "access_token";
 	const isProd = process.env.NODE_ENV == "production";
 	res.cookie(cookieName, token, {
@@ -71,7 +71,7 @@ export async function signInPassword(userInfo: any) {
 			password: parsedParams.data.password,
 		});
 		if (error) {
-			return returnOpFailed(JSON.stringify(error));
+			return returnOpFailed(JSON.stringify(error), 401);
 		}
 		return returnSuccess(data);
 	} catch (err) {
