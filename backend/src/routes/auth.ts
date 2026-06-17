@@ -37,12 +37,13 @@ authRouter.post("/signin", async (req: Request, res: Response) => {
 			});
 		}
 		const result = await signInPassword(req.body);
-		if (!result.success) {
+		console.log(result);
+		if (result && result.success != "true") {
 			console.log(result);
 			return res.status(500).send({ ...result });
 		}
 		const { user, session } = (result as unknown as any).data;
-		setAccessCookie(res, result);
+		setAccessCookie(res, session["access_token"]);
 		return res.status(200).send({
 			success: result.success,
 			data: user,

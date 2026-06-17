@@ -18,8 +18,13 @@ import { NavLink } from "react-router"
 
 export function SignupForm({
   className,
+  submitHandle,
   ...props
-}: React.ComponentProps<"div">) {
+}: {
+  className: string
+  submitHandle: React.SubmitEventHandler<HTMLFormElement> | undefined
+  props: React.ComponentProps<"div">
+}) {
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -30,7 +35,7 @@ export function SignupForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={submitHandle}>
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="firstname">First Name</FieldLabel>

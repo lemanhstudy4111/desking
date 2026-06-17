@@ -11,6 +11,10 @@ import Layout from "./layout.tsx"
 import AuthPageLayout from "./pages/authLayout.tsx"
 import { LoginForm } from "./components/login-form.tsx"
 import { SignupForm } from "./components/signup-form.tsx"
+import Login from "./pages/login.tsx"
+import { ProtectedRoute } from "./components/protected-route.tsx"
+import { AuthContext } from "./hooks/use-auth.ts"
+import { AuthProvider } from "./hooks/auth-reducer.tsx"
 
 const router = createBrowserRouter([
   {
@@ -18,7 +22,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/login",
-        element: <LoginForm />,
+        element: <Login />,
       },
       {
         path: "/signup",
@@ -32,11 +36,19 @@ const router = createBrowserRouter([
       {
         path: "/",
         index: true,
-        element: <Home />,
+        element: (
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "/book",
-        element: <Booking />,
+        element: (
+          <ProtectedRoute>
+            <Booking />
+          </ProtectedRoute>
+        ),
       },
     ],
   },
@@ -45,7 +57,9 @@ const router = createBrowserRouter([
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ThemeProvider>
-      <RouterProvider router={router} />
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
     </ThemeProvider>
   </StrictMode>
 )
