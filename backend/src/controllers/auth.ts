@@ -9,6 +9,7 @@ import { createUserSchema } from "../schema/userSchema.js";
 import {
 	signInUserOTPSchema,
 	signInUserPasswordSchema,
+	verifyJWTSchema,
 	verifyOTPSchema,
 } from "../schema/authSchema.js";
 import dotenv from "dotenv";
@@ -19,6 +20,10 @@ export const supabase = createClient(
 	`https://${process.env.SUPABASE_PROJECT_ID}.supabase.co`,
 	process.env.SUPABASE_PUBLISHABLE_KEY!,
 );
+
+export function clearAccessCookie(res: Response) {
+	res.clearCookie(process.env.ACCESS_TOKEN_COOKIE || "access_token");
+}
 
 export function setAccessCookie(res: Response, token: string) {
 	const cookieName = process.env.ACCESS_TOKEN_COOKIE || "access_token";
@@ -117,6 +122,22 @@ export async function verifyOTP(email: string, OTP: number) {
 			return returnOpFailed(JSON.stringify(error));
 		}
 		return returnSuccess(data);
+	} catch (err) {
+		return returnGeneralError(err);
+	}
+}
+
+export async function signOut(cookies: Record<string, any>) {
+	try {
+		const cookieName = process.env.ACCESS_TOKEN_COOKIE || "access_token";
+		const jwt = cookies[cookieName];
+		const parsedParams = verifyJWTSchema.safeParse({ token: jwt });
+		if (!parsedParams.success) {
+			return returnValidationError(parsedParams.error);
+		}
+		const { token } = parsedParams.data;
+		const signedOut = await supabase.auth.admin.signOut(token);
+		return returnSuccess(signedOut);
 	} catch (err) {
 		return returnGeneralError(err);
 	}

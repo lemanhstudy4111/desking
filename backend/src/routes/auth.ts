@@ -1,7 +1,9 @@
 import { Router, type Request, type Response } from "express";
 import {
+	clearAccessCookie,
 	setAccessCookie,
 	signInPassword,
+	signOut,
 	signUp,
 } from "../controllers/auth.js";
 
@@ -47,6 +49,31 @@ authRouter.post("/signin", async (req: Request, res: Response) => {
 		return res.status(200).send({
 			success: result.success,
 			data: user,
+		});
+	} catch (err) {
+		return res.status(500).send({
+			message: `Something went wrong. Err: ${err}`,
+		});
+	}
+});
+
+authRouter.get("/signout", async (req: Request, res: Response) => {
+	try {
+		if (!req || !req.body) {
+			return res.status(400).send({
+				message: "Invalid request.",
+			});
+		}
+		const result = await signOut(req.cookies);
+		console.log(result);
+		if (result && result.success != "true") {
+			console.log(result);
+			return res.status(500).send({ ...result });
+		}
+		clearAccessCookie(res);
+		return res.status(200).send({
+			success: result.success,
+			data: result,
 		});
 	} catch (err) {
 		return res.status(500).send({
