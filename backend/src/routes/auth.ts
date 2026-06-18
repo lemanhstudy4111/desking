@@ -1,7 +1,6 @@
 import { Router, type Request, type Response } from "express";
 import {
 	clearAccessCookie,
-	logOut,
 	setAccessCookie,
 	signInPassword,
 	signOut,
@@ -65,7 +64,7 @@ authRouter.get("/signout", async (req: Request, res: Response) => {
 				message: "Invalid request.",
 			});
 		}
-		const result = await signOut(req.body);
+		const result = await signOut(req.cookies);
 		console.log(result);
 		if (result && result.success != "true") {
 			console.log(result);
