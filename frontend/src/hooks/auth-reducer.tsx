@@ -1,5 +1,6 @@
 import React, { useReducer, useCallback, useEffect } from "react"
 import { AuthContext } from "./use-auth"
+import { fetchData } from "@/services/fetch"
 
 export interface User {
   id: string
@@ -84,9 +85,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" })
+      await fetchData("/auth/signout", "GET", undefined, undefined, undefined)
     } finally {
-      localStorage.removeItem("authToken")
       dispatch({ type: "LOGOUT" })
     }
   }, [])
