@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { verifyJWTSchema } from "../schema/authSchema.js";
-import { returnValidationError } from "../error.js";
+import { returnOpFailed, returnValidationError } from "../error.js";
 import { supabase } from "../controllers/auth.js";
 import type { NextFunction, Request, Response } from "express";
 dotenv.config();
@@ -39,6 +39,9 @@ export async function verifyToken(
 			req.cookies[process.env.ACCESS_TOKEN_COOKIE as any]?.["data"]?.[
 				"session"
 			]?.["access_token"];
+		if (!jwtToken) {
+			return returnOpFailed("User is not authenticated.", 403);
+		}
 		const parsedParams = verifyJWTSchema.safeParse({
 			token: jwtToken,
 		});
@@ -79,9 +82,7 @@ export async function verifyToken(
 			console.log(
 				`User not authenticated or something went wrong when getting status. Data ${JSON.stringify(data)}`,
 			);
-			throw new Error(
-				"User not authenticated or something went wrong when getting status",
-			);
+			return returnOpFailed("User is not authenticated.", 403);
 		}
 		req.body["token"] = data;
 		next();
