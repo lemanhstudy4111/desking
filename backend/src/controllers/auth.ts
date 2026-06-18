@@ -127,8 +127,10 @@ export async function verifyOTP(email: string, OTP: number) {
 	}
 }
 
-export async function signOut(jwt: string) {
+export async function signOut(cookies: Record<string, any>) {
 	try {
+		const cookieName = process.env.ACCESS_TOKEN_COOKIE || "access_token";
+		const jwt = cookies[cookieName];
 		const parsedParams = verifyJWTSchema.safeParse({ token: jwt });
 		if (!parsedParams.success) {
 			return returnValidationError(parsedParams.error);
