@@ -1,13 +1,15 @@
 export async function fetchData(
   urlString: string,
-  params: { [key: string]: string },
-  headers: { [key: string]: string } | undefined,
   method: "GET" | "POST" | "PUT" | "DELETE",
-  body: { [key: string]: unknown } | undefined
+  params?: { [key: string]: string } | undefined,
+  headers?: { [key: string]: string } | undefined,
+  body?: { [key: string]: unknown } | undefined
 ) {
   const url = new URL(`http://localhost:3000/api/v1/${urlString}`)
-  for (const [key, value] of Object.entries(params)) {
-    url.searchParams.set(key, value as unknown as string)
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      url.searchParams.set(key, value as unknown as string)
+    }
   }
   const myHeaders = new Headers()
   if (headers) {
@@ -25,7 +27,10 @@ export async function fetchData(
     headers: myHeaders,
     body: raw,
   }
-  return await fetch(url, reqOptions)
+  return await fetch(url, {
+    ...reqOptions,
+    credentials: "include",
+  })
     .then((res) => res.json())
     .catch((err) => ({
       success: "false",
